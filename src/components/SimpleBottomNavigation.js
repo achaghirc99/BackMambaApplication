@@ -8,9 +8,9 @@ import BottomNavigation from '@material-ui/core/BottomNavigation';
 import BottomNavigationAction from '@material-ui/core/BottomNavigationAction';
 import {
   Home,
-  LocalBar,
+  Group,
   AccountCircle,
-  EventSeatTwoTone,
+  SportsBasketball
 } from '@material-ui/icons';
 
 const useStyles = makeStyles({
@@ -24,7 +24,7 @@ export default function SimpleBottomNavigation(props)  {
     const classes = useStyles(); 
     const history = useHistory(); 
     const [value, setValue] = React.useState(0);
-    const { auth, isLogged, currentBar, updateCurrentBar } = useUser();
+    const { auth, isLogged, currentComunity } = useUser();
 
     return (
       <Drawer variant="persistent" anchor="bottom" open={isLogged}>
@@ -45,19 +45,19 @@ export default function SimpleBottomNavigation(props)  {
         />
         <BottomNavigationAction
           xs={3}
-          label="Bares"
-          icon={<LocalBar />}
+          label="Tu Equipo"
+          icon={<SportsBasketball />}
           component={Link}
-          to="/bares"
+          to="/team"
         />
-        {currentBar !== undefined ? (
+        {auth && auth.comunidad !== undefined && (
           <BottomNavigationAction
             xs={3}
-            label="Tu bar"
-            icon={<EventSeatTwoTone />}
-            onClick={() => history.push(`/bares/${currentBar.id}`)}
+            label="Tu Comunidad"
+            icon={<Group />}
+            onClick={() => history.push(`/yourComunity`)}
           />
-        ) : (
+          )}
           <BottomNavigationAction
             xs={3}
             label="Perfil"
@@ -65,7 +65,7 @@ export default function SimpleBottomNavigation(props)  {
             component={Link}
             to="/profile"
           />
-        )}
+
       </BottomNavigation>
     </Drawer>
     );

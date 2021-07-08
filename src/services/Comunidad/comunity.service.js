@@ -11,7 +11,9 @@ class ComunityDataService {
         return http.post(`/comunidades/${idUser}`, object, {headers: authHeader()});
     }
 
-    //joinComunity(object, )
+    joinComunity(object,idComunidad, idUser){
+        return http.put(`/comunidades/${idComunidad}/${idUser}`, object, {headers: authHeader()});
+    }
 }
 
 export default new ComunityDataService();

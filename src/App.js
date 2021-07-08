@@ -11,6 +11,8 @@ import Home from './pages/Home';
 import Comunity from './pages/Comunity/comunity';
 import BottomBar from './components/SimpleBottomNavigation';
 import ManageComunity from './pages/Comunity/comunity';
+import CreateTeam from './pages/Team/createTeam';
+import TeamDetails from './pages/Team/teamDetails';
 
 const drawerWidth = 240
 
@@ -99,6 +101,8 @@ function App() {
             <Route exact path={'/login'} component={Login} />
             <Route exact path={'/signup'} component={Signup} />
             <Route exact path={'/community'} component={ManageComunity} />
+            <Route exact path={'/createTeam'} component={CreateTeam} />
+            <Route exact path={'/team'} component={TeamDetails} />
           </Switch>
         </main>
         <div className={classes.colorBar}>

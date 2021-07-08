@@ -13,7 +13,8 @@ import useUser from '../../hooks/useUser'
 import createComunidadImg from "../../static/images/createComunidad.png"
 import joinComunityImg from "../../static/images/joinComunity.jpg"
 import ComunityDataService from "../../services/Comunidad/comunity.service"
-import SimpleModal from "../../hooks/simpleModal"
+import {Backdrop, CircularProgress} from "@material-ui/core";
+
 const useStyles = makeStyles((theme) => ({
     root: {
         '& .MuiInputLabel-formControl': {
@@ -68,6 +69,13 @@ const useStyles = makeStyles((theme) => ({
         float: "rigth",
         backgroundColor: theme.palette.warning.dark,
         margin: "10px 10px 0px 0px"
+    },
+    backdrop: {
+        zIndex: theme.zIndex.drawer + 1,
+        color: '#fff',
+    },
+    circularStyle : {
+        color: theme.palette.warning.dark
     }
 }));
 
@@ -81,7 +89,9 @@ const columns = [
 
 export default function ManageComunity() {
     const classes = useStyles();
+    const [loading, setLoading] = useState(false)
     const [comunity, setComunity] = useState({})
+    const [comunitySelected, setComunitySelected] = useState({}) //The comunity we want to Join
     const [comunities, setComunities] = useState([]);
     const [type, setType] = useState('')
     const [password, setPassword] = useState('')
@@ -90,10 +100,11 @@ export default function ManageComunity() {
         createComunity: false,
         joinComunity: false
     });
-    const [openSubmitIncorrect, setOpenSubmitIncorrect] = useState(false)
+    const [openSubmitIncorrect, setOpenSubmitIncorrect] = useState(false);
+    const [showModalIncorrectPasswordComunity, setShowModalIncorrectPasswordComunity] = useState(false);
     const history = useHistory()
     //const { auth } = useUser()
-    const auth = JSON.parse(window.sessionStorage.getItem('user'));
+    let auth = JSON.parse(window.sessionStorage.getItem('user'));
     const admin = auth.rol === "USER"
     const [errors, setErrors] = useState({})
 
@@ -122,6 +133,7 @@ export default function ManageComunity() {
 
 
     const handleSubmit = (evt) => {
+        setLoading(true)
         evt.preventDefault();
         let object = {}
         if (handleValidation()) {
@@ -136,6 +148,9 @@ export default function ManageComunity() {
             }
             ComunityDataService.createComunity(object, auth.id).then(response => {
                 if (response.status === 200) {
+                    auth.comunidad = response.data;
+                    sessionStorage.removeItem("user")
+                    sessionStorage.setItem("user", JSON.stringify(auth));
                     history.push({ pathname: '/createTeam/', state: { data: true } });
                 } else {
                     setOpenSubmitIncorrect(true)
@@ -189,14 +204,16 @@ export default function ManageComunity() {
         if (reason === 'clickaway') {
             return;
         }
-        setOpenSubmitIncorrect(false)
+        setOpenSubmitIncorrect(false);
         setOpenModalPassword(false);
+        setShowModalIncorrectPasswordComunity(false);
     };
 
     //UNIRME A UNA COMUNIDAD LÓGICA
     const handleFinishJoinComunity = (comunity) => {
         if(comunity.type === "Private"){
             //POPUP PARA RELLENAR LA CONTRASEÑA
+            setComunitySelected(comunity);
             setOpenModalPassword(true)
         }else{
             //AQUÍ INTRODUCE DIRECTAMENTE AL USER EN LA COMUNIDAD
@@ -205,6 +222,27 @@ export default function ManageComunity() {
     }
 
     const handleJoinComunityLastStep = (comunity) => {
+
+        if(comunity.type === "Private"){
+            if(password === comunity.password){
+                ComunityDataService.joinComunity(comunity, comunity._id, auth.id).then(res => {
+                    auth.comunidad = res.data;
+                    sessionStorage.removeItem("user")
+                    sessionStorage.setItem("user", JSON.stringify(auth));
+                    history.push("/createTeam")
+                })
+            }else{
+                setShowModalIncorrectPasswordComunity(true)
+            }
+        }else{
+            ComunityDataService.joinComunity(comunity, comunity._id, auth.id).then(res => {
+                auth.comunidad = res.data;
+                sessionStorage.removeItem("user")
+                sessionStorage.setItem("user", JSON.stringify(auth));
+                history.push("/createTeam")
+            })
+        }
+
 
     }
 
@@ -224,7 +262,7 @@ export default function ManageComunity() {
                         autoComplete="current-password" error={errors.password !== null && errors.password !== undefined && errors.password !== ''} 
                             helperText={errors.password} onChange={(e) => setPassword(e.target.value)}
                     />
-                    <Button variant="contained" className={classes.buttonFinalizar} >Finalizar</Button>
+                    <Button variant="contained" className={classes.buttonFinalizar} onClick={() => handleJoinComunityLastStep(comunitySelected)}>Finalizar</Button>
             </div>
                 </Modal>
             </div>
@@ -422,6 +460,14 @@ export default function ManageComunity() {
                 </Container>
             )
             }
+            <Backdrop className={classes.backdrop} open={loading}>
+                <CircularProgress className={classes.circularStyle} />
+            </Backdrop>
+            <Snackbar open={showModalIncorrectPasswordComunity} autoHideDuration={6000} onClose={handleClose}>
+                <Alert onClose={handleClose} severity="warning">
+                    La contraseña introducida no es correcta para la comunidad.
+                </Alert>
+            </Snackbar>
         </div>
 
     )

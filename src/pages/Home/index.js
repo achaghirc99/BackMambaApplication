@@ -241,7 +241,7 @@ function AuthenticatedHome(props) {
                                     color="textSecondary"
                                     paragraph
                                 >
-                                    ¿En que zona desea buscar restaurantes?
+                                    Bienvenido a BlackMamba
                                 </Typography>
                             </div>
                         </div>

@@ -92,13 +92,16 @@ export default function useUser() {
 
     const logout = useCallback(() => {
         history.push("/")
-        window.localStorage.removeItem('user')
+        window.sessionStorage.removeItem('user')
+        window.sessionStorage.removeItem('team')
         setAuth(null)
     }, [setAuth, history])
  
     const updateCurrentComunity = useCallback((comunity) => {
         setCurrentComunity(comunity)
     }, [setCurrentComunity])
+
+
 
     return {
         isLogged: Boolean(auth),
