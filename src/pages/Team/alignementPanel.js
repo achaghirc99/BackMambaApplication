@@ -4,10 +4,11 @@ import TeamDataService from "../../services/Team/team.service"
 import { makeStyles } from '@material-ui/core/styles'
 import { useHistory } from 'react-router'
 import { Card, CardMedia, CardActionArea, CardContent, Typography,Container, Grid, MenuItem, InputLabel,FormControl, Select, 
-    ButtonBase,Button, useMediaQuery, useTheme, Avatar, NativeSelect, Badge, withStyles } from '@material-ui/core';
+    ButtonBase,Button, useMediaQuery, useTheme, Avatar, NativeSelect, Badge, withStyles, Snackbar } from '@material-ui/core';
 import backgroundBasketCourt from "../../static/images/basketballCourtOrange.jpg"
 import useUser from '../../hooks/useUser';
 import PlayersCardAlignment from '../../components/PlayersCardsAlignment';
+import Alert from '@material-ui/lab/Alert';
 
 const SmallAvatar = withStyles((theme) => ({
     root: {
@@ -183,7 +184,7 @@ export default function AlignementPanel(props) {
             }
             TeamDataService.changeAlignmente(team._id, object).then((res) => {
                 if(res.status === 200) {
-                    window.alert('Alignment modificated correctly');
+                    setOpen(true)
                 }
             }).catch(e => {
                 console.log(e);
@@ -191,6 +192,13 @@ export default function AlignementPanel(props) {
         }
 
     }
+
+    const handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setOpen(false);
+    };
     const handleValidateAlignment = () => {
         var validate  =  true;
 
@@ -369,7 +377,11 @@ export default function AlignementPanel(props) {
                 </Grid>  
                 <Button align="center" onClick={() => handleSubmitAlignment()} variant="contained" className={classes.submit} >Guardar alineacion</Button>  
                 </div>
-
+                <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+                    <Alert onClose={handleClose} severity="info">
+                        Alineación guardada correctamente
+                    </Alert>
+                </Snackbar>   
         </div>
     )
 

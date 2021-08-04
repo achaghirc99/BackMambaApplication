@@ -1,15 +1,14 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
-
+import TeamDataService from '../../services/Team/team.service'
 import {makeStyles, useTheme} from '@material-ui/core/styles';
 import Footer from '../../components/Footer';
 import useUser from '../../hooks/useUser';
-
 import '../../styles/home.css';
 import {Button, Grid, Paper, useMediaQuery, ThemeProvider} from '@material-ui/core';
-
+import {useHistory} from 'react-router'
 import img1 from "../../static/images/logo.png"
 import img2 from "../../static/images/logo.png"
 import img3 from "../../static/images/logo.png"
@@ -220,6 +219,8 @@ function AuthenticatedHome(props) {
         setPaymentSuccess(false)
     };
 
+    
+
     return (
         <div style={{marginBottom: "30px"}}>
             <Container component={"main"}>
@@ -258,8 +259,20 @@ function AuthenticatedHome(props) {
 
 export default function Home(props) {
     const {isLogged} = useUser();
+    const history = useHistory()
+    const auth = JSON.parse(sessionStorage.getItem('user')) != null ? JSON.parse(sessionStorage.getItem('user')) : null;
+    useEffect(() => {
+        if(auth != null){
+            TeamDataService.getTeam(auth.id).then((res) => {
+                if(res.data === ""){
+                    history.push('/createTeam');
+                }
+            })
+        }
+    })
 
-    return isLogged ? (
+
+    return Boolean(auth) ? (
         <AuthenticatedHome history={props.history} />
     ) : (
         <Landing></Landing>

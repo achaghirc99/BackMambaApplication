@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import {useHistory} from 'react-router'
 import TeamDataService from '../../services/Team/team.service'
 import useUser from '../../hooks/useUser';
-import { Avatar, Container, Paper, Typography, Grid, Card, CardContent, CardHeader, Badge, Button } from '@material-ui/core';
+import { Avatar, Container, Paper, Typography, Grid, Card, CardContent, CardHeader, Badge, Button, Backdrop, CircularProgress, Snackbar } from '@material-ui/core';
 import { makeStyles, withStyles } from '@material-ui/styles';
 import DeleteSweepIcon from '@material-ui/icons/DeleteSweep';
-
+import Utiles from "../../hooks/utils";
+import siluetaBasket from '../../static/images/siluetaBasket.jpg'
+import Context from '../../context/UserContext';
+import img from '../../static/images/teamImages/vancouver.png'
+import Alert from '@material-ui/lab/Alert';
 const SmallAvatar = withStyles((theme) => ({
     root: {
       width: 25,
@@ -47,8 +51,9 @@ const useStyles = makeStyles((theme) => ({
         },
     },
     avatarTeamImg: {
-        height:theme.spacing(25),
-        width:theme.spacing(25),
+        width:"300px",
+        height:"300px",
+        borderRadius:"150px",
         objectFit: "fill"
     },
     paperCentered: {
@@ -75,8 +80,10 @@ const useStyles = makeStyles((theme) => ({
         margin: "15px auto"
     },
     avatarPlayer: {
-        height:theme.spacing(15),
-        width:theme.spacing(15),
+        width:"110px",
+        height:"150px",
+        borderRadius:"100px",
+        objectFit: "fill"
     }, 
     gridPlayers: {
         padding: "30px"
@@ -91,68 +98,66 @@ const useStyles = makeStyles((theme) => ({
     gridContainerStatics: {
         margin: "40px auto"
     },
-
-
+    backdrop: {
+        zIndex: theme.zIndex.drawer + 1,
+        color: '#fff',
+    },
+    circularStyle : {
+        color: theme.palette.warning.dark
+    }
 }))
-
 
 export default function TeamDetailsPanel(props) {
     const classes = useStyles();
+    const [loading, setLoading] = useState(false);
+    const [deletePlayer,setDeletePlayers] = useState(false); //Lo uso para lanzar el useEffect despues de eliminar un jugador.
     const [team, setTeam] = useState({})
     const [top5PointPlayers, setTop5PointPlayers] = useState([]);
     const [playersToTransfer, setPlayersToTransfer] = useState([]);
     const history = useHistory();
     const {auth} = useUser();
-    
+    const {currentTeam} = useContext(Context);
+    const [showSuccessStatusChange, setShowSuccessStatusChange] = useState(false);
     useEffect(() => {
-        if(auth){
-            TeamDataService.getTeam(auth.id).then((res) => {
-                // Si los puntos de todos los jugadores es diferente de los puntos que tiene el equipo los actualizamos
-                var playersPonits = checkPointsOfAllPlayers(res.data.players);
-                let top5PlayersPoints = res.data.players.sort(compare);
-                if(playersPonits !== res.data.points) { 
-                    const team = res.data;
-                    team.points = playersPonits;
-                    TeamDataService.updateTeam(team).then((res) => {
-                        setTeam(res.data);
-                    })
-                }else {
-                    setTeam(res.data)
-                }
-                setTop5PointPlayers(top5PlayersPoints.slice(0,5));
-                setPlayersToTransfer(res.data.players.filter(player => player.status === 'Transferible'));
-            })
-        }else{
+        if(!auth){
             history.push('/signup');
         }
-    },[history, auth])
-
-    const getPlayersToTransfer = (players) => {
-        let resultado = [];
-
-
-
-
-
-        return resultado;
-    }
-
-    function compare( player1, player2 ) {
-        if (player1.points > player2.points ){
-          return -1;
+        if(currentTeam === ""){
+            history.push('/createTeam');
         }
-        if ( player1.points < player2.points ){
-          return 1;
+        else{
+            setLoading(true);
+            TeamDataService.getTeam(auth.id).then((res) => {
+                if(res.data === ""){
+                    history.push('/createTeam');
+                }else{
+                    let top5PlayersPoints = res.data.players.sort(Utiles.compare);                
+                    setTeam(res.data);
+                    setTop5PointPlayers(top5PlayersPoints.slice(0,5));
+                    setPlayersToTransfer(res.data.players.filter(player => player.status === 'Transferible'));
+                    setLoading(false);
+                }
+            })
         }
-        return 0;
-    }
-    const checkPointsOfAllPlayers = (players) => {
-        let points = 0;
-        players.map((player) => { 
-            points += player.points
+    },[history, auth, deletePlayer])
+
+    const deletePlayersFromMarket = (player) => {
+        var status = "ConEquipo"
+        TeamDataService.actualizaJugadorDelEquipo(team._id,player._id,status).then(() => {
+            if(deletePlayer === false){
+                setDeletePlayers(true);
+            }else{
+                setDeletePlayers(false);
+            }
+            setShowSuccessStatusChange(true);
         })
-        return points;
     }
+    const handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setShowSuccessStatusChange(false);
+    };
 
     return (
         <div>
@@ -165,7 +170,7 @@ export default function TeamDetailsPanel(props) {
                         
                     </Paper>
                 </div>
-                <Avatar alt={team.name} src={team.image} className={classes.avatarTeamImg} />
+                <img alt={team.name} src={team.image} className={classes.avatarTeamImg} />
             </Container>
             <Container>
                 <Grid container  spacing={2} className={classes.gridContainerStatics}>
@@ -193,7 +198,7 @@ export default function TeamDetailsPanel(props) {
                                   Presupuesto: {team.budget} €
                                 </Typography>
                                 <Typography variant="h5" component="h5">
-                                  Total Jugadores: {team.numPlayers} €
+                                  Total Jugadores: {team.numPlayers}
                                 </Typography>
                             </CardContent>
                         </Card>
@@ -223,13 +228,13 @@ export default function TeamDetailsPanel(props) {
                                                 }}
                                                 badgeContent={<SmallAvatar><p className={classes.pointsSize}>{player.points}</p></SmallAvatar>}
                                             >
-                                                <Avatar className={classes.avatarPlayer} alt={player.name} src={player.playerImg} />
+                                                <img className={classes.avatarPlayer} alt={player.name} src={player.playerImg} />
                                             </Badge>
                                             <Typography variant="body2" component="p">
                                                 <p>{player.name} <br></br>{player.transferValue}€</p> 
                                                 <SmallAvatarPosition><p className={classes.positionSize}>{player.position}</p></SmallAvatarPosition>
                                             </Typography>
-                                            <Button><DeleteSweepIcon /></Button>
+                                            <Button onClick={() => deletePlayersFromMarket(player)}><DeleteSweepIcon /></Button>
                                         </Grid>    
                                     ))
                                     }
@@ -262,7 +267,7 @@ export default function TeamDetailsPanel(props) {
                                                 }}
                                                 badgeContent={<SmallAvatar><p className={classes.pointsSize}>{player.points}</p></SmallAvatar>}
                                             >
-                                                <Avatar className={classes.avatarPlayer} alt={player.name} src={player.playerImg} />
+                                                <Avatar className={classes.avatarPlayer} alt={player.name} src={player.playerImg.split('.')[1] === 'gif' ? siluetaBasket : player.playerImg} />
                                             </Badge>
                                             <Typography variant="body2" component="p">
                                                 {player.name} <SmallAvatarPosition><p className={classes.positionSize}>{player.position}</p></SmallAvatarPosition>
@@ -276,10 +281,14 @@ export default function TeamDetailsPanel(props) {
                     </Grid>
                 </Grid>
             </Container>
-            
-           
-            
-            
+            <Backdrop className={classes.backdrop} open={loading}>
+               <CircularProgress className={classes.circularStyle}/>
+            </Backdrop>    
+            <Snackbar open={showSuccessStatusChange} autoHideDuration={6000} onClose={handleClose}>
+                <Alert onClose={handleClose} severity="info">
+                    Jugador eliminado del mercado correctamente
+                </Alert>
+            </Snackbar>        
         </div>
 
     )

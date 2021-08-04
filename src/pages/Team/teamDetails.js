@@ -97,7 +97,7 @@ export default function TeamDetails(props) {
       }else{
           history.push('/signup');
       }
-  },[auth])
+  },[auth,history])
 
     const handleChange = (event, newValue) => {
       setValue(newValue);

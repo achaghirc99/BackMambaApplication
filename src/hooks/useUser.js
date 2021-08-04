@@ -4,7 +4,7 @@ import * as authService from '../services/Authentication/auth'
 import { useHistory } from 'react-router'
 
 export default function useUser() {
-    const { auth, setAuth, currentComunity, setCurrentComunity, currentTeam, setCurrentTeam } = useContext(Context)
+    const { auth, setAuth, currentComunity, setCurrentComunity,currentTeam, setCurrentTeam} = useContext(Context)
     const [state, setState] = useState({ loading: false, error: false })
     const [isUpdate, setUpdate] = useState(false)
     
@@ -30,7 +30,7 @@ export default function useUser() {
 
                 const status = err.response.status
                 if (status === 401) {
-                    setState({ loading: false, error: "Usuario o contraseña incorrectos." })
+                    setState({ loading: false, error: "El usuario o contraseña son incorrectos." })
                 } else {
                     history.push("/pageNotFound")
                 }
@@ -41,6 +41,7 @@ export default function useUser() {
         setState({ loading: true, error: false })
         authService.register({ nickName, email, rol, password, firstName, lastName })
             .then(() => {
+                setState({ loading: false, error: false })
                 history.push({
                     pathname: '/login',
                     search: '?registered=true'
@@ -48,8 +49,8 @@ export default function useUser() {
             })
             .catch(err => {
                 if (err.response.status === 400) {
-                    let errmessage = err.response.data.message
-                    if (!errmessage) {
+                    let errmessage = err.response.data;
+                    if (errmessage === "") {
                         errmessage = "Por favor, revise los datos introducidos e inténtelo de nuevo."
                     }
                     setState({ loading: false, error: errmessage })

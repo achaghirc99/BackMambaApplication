@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from 'react'
+import React, { useState, useEffect, useContext} from 'react'
 import PropTypes from 'prop-types';
 import { makeStyles, useTheme } from '@material-ui/core/styles'
 import Alert from '@material-ui/lab/Alert'
@@ -14,6 +14,7 @@ import createComunidadImg from "../../static/images/createComunidad.png"
 import joinComunityImg from "../../static/images/joinComunity.jpg"
 import ComunityDataService from "../../services/Comunidad/comunity.service"
 import {Backdrop, CircularProgress} from "@material-ui/core";
+import Context from '../../context/UserContext';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -93,6 +94,7 @@ export default function ManageComunity() {
     const [comunity, setComunity] = useState({})
     const [comunitySelected, setComunitySelected] = useState({}) //The comunity we want to Join
     const [comunities, setComunities] = useState([]);
+    const [comunityFull, setComunityFull] = useState(false);
     const [type, setType] = useState('')
     const [password, setPassword] = useState('')
     const [openModalPassword, setOpenModalPassword] = useState(false);
@@ -103,7 +105,7 @@ export default function ManageComunity() {
     const [openSubmitIncorrect, setOpenSubmitIncorrect] = useState(false);
     const [showModalIncorrectPasswordComunity, setShowModalIncorrectPasswordComunity] = useState(false);
     const history = useHistory()
-    //const { auth } = useUser()
+    const {currentComunity,setCurrentComunity} = useContext(Context);
     let auth = JSON.parse(window.sessionStorage.getItem('user'));
     const admin = auth.rol === "USER"
     const [errors, setErrors] = useState({})
@@ -122,12 +124,20 @@ export default function ManageComunity() {
     /////////
 
     useEffect(() => {
-        if (!admin) history.push('/')
+        if (auth === "") {
+            history.push('/')
+        }else {
+            if(auth.comunidad !== null){
+                history.push('/')
+            }
+        }
     }, [admin, history])
 
     useEffect(() => {
+        setLoading(true);
         ComunityDataService.getAllComunitys().then(response => {
             setComunities(response.data);
+            setLoading(false);
         })
     }, [setComunities, history])
 
@@ -137,20 +147,27 @@ export default function ManageComunity() {
         evt.preventDefault();
         let object = {}
         if (handleValidation()) {
+            object = {
+                "name": comunity.name, 
+                "password" : "",
+                "numIntegrants":comunity.numIntegrantes, 
+                "budget": comunity.budget, 
+                "type": type, 
+                "jugadoresMaximosMercado" : comunity.jugadoresMaximosMercado,
+                "maxDaysPlayerOnMarket" : comunity.maxDaysPlayerOnMarket,
+                "playersForUserInMarket" : comunity.playersForUserInMarket
+            }
             if(type === "Private"){
-                object = {
-                    "name": comunity.name, "password": comunity.password, "numIntegrants":comunity.numIntegrantes, "budget": comunity.budget, "type": type
-                }
+               object.password = comunity.password
             }else {
-                object = {
-                    "name": comunity.name, "numIntegrants":comunity.numIntegrantes, "budget": comunity.budget, "type": type
-                }
+                object.password = null;
             }
             ComunityDataService.createComunity(object, auth.id).then(response => {
                 if (response.status === 200) {
                     auth.comunidad = response.data;
                     sessionStorage.removeItem("user")
                     sessionStorage.setItem("user", JSON.stringify(auth));
+                    setCurrentComunity(response.data);
                     history.push({ pathname: '/createTeam/', state: { data: true } });
                 } else {
                     setOpenSubmitIncorrect(true)
@@ -184,6 +201,18 @@ export default function ManageComunity() {
         if(!comunity.budget) {
             valid = false;
             objErrors['budget'] = 'Tienes que rellenar este campo con un valor válido'
+        }
+        if(!comunity.jugadoresMaximosMercado) {
+            valid = false;
+            objErrors['jugadoresMaximosMercado'] = 'Tienes que rellenar este campo con un valor válido'
+        }
+        if(!comunity.maxDaysPlayerOnMarket) {
+            valid = false;
+            objErrors['maxDaysPlayerOnMarket'] = 'Tienes que rellenar este campo con un valor válido'
+        }
+        if(!comunity.playersForUserInMarket) {
+            valid = false;
+            objErrors['playersForUserInMarket'] = 'Tienes que rellenar este campo con un valor válido'
         }
         setErrors(objErrors);
         return valid;
@@ -246,7 +275,6 @@ export default function ManageComunity() {
 
     }
 
-
     return (
         <div> 
             <div>
@@ -256,14 +284,14 @@ export default function ManageComunity() {
                   aria-labelledby="simple-modal-title"
                   aria-describedby="simple-modal-description"
                 >
-                  <div className={classes.paper}>
-                    <h2 id="simple-modal-title">Introduce la contraseña de la comunidad.</h2>
-                    <TextField required id="password" name="password" label="Contraseña" variant="outlined" type="password" 
-                        autoComplete="current-password" error={errors.password !== null && errors.password !== undefined && errors.password !== ''} 
-                            helperText={errors.password} onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <Button variant="contained" className={classes.buttonFinalizar} onClick={() => handleJoinComunityLastStep(comunitySelected)}>Finalizar</Button>
-            </div>
+                    <div className={classes.paper}>
+                        <h2 id="simple-modal-title">Introduce la contraseña de la comunidad.</h2>
+                        <TextField required id="password" name="password" label="Contraseña" variant="outlined" type="password" 
+                            autoComplete="current-password" error={errors.password !== null && errors.password !== undefined && errors.password !== ''} 
+                                helperText={errors.password} onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <Button variant="contained" className={classes.buttonFinalizar} onClick={() => handleJoinComunityLastStep(comunitySelected)}>Finalizar</Button>
+                    </div>
                 </Modal>
             </div>
             <Typography align="center" variant="h4"className={classes.title} gutterBottom>
@@ -320,16 +348,16 @@ export default function ManageComunity() {
                             Crea tu Comunidad
                         </Typography>
                         <div className={classes.divForm}>
-                            <form onSubmit={(e) => handleSubmit(e)} className={classes.root}>
-                                <Grid container justify="center" alignItems="center" className={classes.nameGrid}>
-                                    <Grid item  sm={3}>
+                            <form onSubmit={(e) => handleSubmit(e)}>
+                                <Grid container justify="center" alignItems="center">
+                                    <Grid item  align="center"  sm={3}>
                                         <div>
                                             <TextField className='input-title' id="name" label="Nombre"
                                                 helperText={errors.name} variant="outlined" InputLabelProps={{shrink: true}} name="name" onChange={(e) => handleChange(e)} />
                                         </div>
                                     </Grid>
                                     {type === "Private" && (
-                                        <Grid item sm={3} >
+                                        <Grid align="center" item sm={3} >
                                             <div>
                                                 <TextField required id="password" name="password" label="Contraseña" variant="outlined" type="password" 
                                                     autoComplete="current-password" error={errors.password !== null && errors.password !== undefined && errors.password !== ''} 
@@ -341,15 +369,35 @@ export default function ManageComunity() {
                                     }
                                 </Grid>
                                 <Grid container justify="center" alignItems="center" >
-                                    <Grid item  sm={3}>
+                                    <Grid item  align="center" sm={3}>
                                         <div style={{ marginTop: '20px' }}>
                                             <TextField id="numIntegrantes" name="numIntegrantes" label="Número de Integrantes" type="number" 
                                                 InputLabelProps={{shrink: true}} min="1" max="10" step="2" variant="outlined" onChange={(e) => handleChange(e)}/>
                                         </div>
                                     </Grid>
-                                    <Grid item   sm={3}>
+                                    <Grid item  align="center" sm={3}>
                                         <div style={{ marginTop: '20px' }}>
                                             <TextField id="budget" name="budget" label="Presupuesto" type="number" 
+                                                InputLabelProps={{shrink: true}} min="1" max="10" step="2" variant="outlined" onChange={(e) => handleChange(e)}/>
+                                        </div>
+                                    </Grid>
+                                </Grid>
+                                <Grid container justify="center" alignItems="center" >
+                                    <Grid item align="center"  sm={3} md={3}>
+                                        <div style={{ marginTop: '20px' }}>
+                                            <TextField id="maxDaysPlayerOnMarket" name="maxDaysPlayerOnMarket" label="Días máximos jugador en mercado" type="number" 
+                                                InputLabelProps={{shrink: true}} min="1" max="10" step="2" variant="outlined" onChange={(e) => handleChange(e)}/>
+                                        </div>
+                                    </Grid>
+                                    <Grid align="center" item  sm={3} md={3}>
+                                        <div style={{ marginTop: '20px' }}>
+                                            <TextField id="jugadoresMaximosMercado" name="jugadoresMaximosMercado" label="Jugadores máximos en mercado" type="number" 
+                                                InputLabelProps={{shrink: true}} min="1" max="10" step="2" variant="outlined" onChange={(e) => handleChange(e)}/>
+                                        </div>
+                                    </Grid>
+                                    <Grid item align="center" sm={3} md={3}>
+                                        <div style={{ marginTop: '20px' }}>
+                                            <TextField id="playersForUserInMarket" name="playersForUserInMarket" label="Jugadores máximos en mercado para cada usuario" type="number" 
                                                 InputLabelProps={{shrink: true}} min="1" max="10" step="2" variant="outlined" onChange={(e) => handleChange(e)}/>
                                         </div>
                                     </Grid>
@@ -426,7 +474,8 @@ export default function ManageComunity() {
                                 {row.type}
                               </TableCell>
                               <TableCell style={{ width: 160 }} align="right">
-                                <Button variant="contained" className={classes.buttonJoin} onClick={() => handleFinishJoinComunity(row)}>Unirme</Button>
+                                {row.users.length === row.numIntegrants ? <Button variant="contained" className={classes.buttonJoin} disabled>Completa</Button> 
+                                                    : <Button variant="contained" className={classes.buttonJoin} onClick={() => handleFinishJoinComunity(row)}>Unirme</Button>}
                               </TableCell>
                             </TableRow>
                           ))}

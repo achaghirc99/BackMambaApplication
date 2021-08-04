@@ -13,6 +13,9 @@ import BottomBar from './components/SimpleBottomNavigation';
 import ManageComunity from './pages/Comunity/comunity';
 import CreateTeam from './pages/Team/createTeam';
 import TeamDetails from './pages/Team/teamDetails';
+import ComunityDetails from './pages/Comunity/comunityDetails';
+import ComunityConfig from './pages/Comunity/comunityConfig';
+import AdminView from './pages/Admin/adminView';
 
 const drawerWidth = 240
 
@@ -98,11 +101,14 @@ function App() {
           <div className={classes.drawerHeader} />
           <Switch>
             <Route exact path={'/'} component={Home}/>
+            <Route exact path={'/admin'} component={AdminView}/>
             <Route exact path={'/login'} component={Login} />
             <Route exact path={'/signup'} component={Signup} />
             <Route exact path={'/community'} component={ManageComunity} />
             <Route exact path={'/createTeam'} component={CreateTeam} />
             <Route exact path={'/team'} component={TeamDetails} />
+            <Route exact path={'/yourComunity'} component={ComunityDetails} />
+            <Route exact path={'/comunityConfig'} component={ComunityConfig} />
           </Switch>
         </main>
         <div className={classes.colorBar}>
