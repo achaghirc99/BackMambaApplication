@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import useUser from '../hooks/useUser';
 import Drawer from '@material-ui/core/Drawer';
@@ -24,7 +24,7 @@ export default function SimpleBottomNavigation(props)  {
     const classes = useStyles(); 
     const history = useHistory(); 
     const [value, setValue] = React.useState(0);
-    const { auth, isLogged, currentComunity } = useUser();
+    const { auth, isLogged } = useUser();
 
     return (
       <Drawer variant="persistent" anchor="bottom" open={isLogged}>

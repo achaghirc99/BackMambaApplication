@@ -50,3 +50,4 @@ export function checkToken() {
 export function getCurrentUser() {
     return JSON.parse(localStorage.getItem('user'));
 }
+

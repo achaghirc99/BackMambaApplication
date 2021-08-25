@@ -1,21 +1,24 @@
-import React, {useState, useEffect} from 'react';
+import React, { useEffect, useState} from 'react';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
 import TeamDataService from '../../services/Team/team.service'
+import NoticeDataService from '../../services/Notices/notice.service';
 import {makeStyles, useTheme} from '@material-ui/core/styles';
 import Footer from '../../components/Footer';
-import useUser from '../../hooks/useUser';
 import '../../styles/home.css';
-import {Button, Grid, Paper, useMediaQuery, ThemeProvider} from '@material-ui/core';
+import {Button, Grid, Paper, useMediaQuery} from '@material-ui/core';
 import {useHistory} from 'react-router'
 import img1 from "../../static/images/logo.png"
 import img2 from "../../static/images/logo.png"
 import img3 from "../../static/images/logo.png"
 import Logo from "../../static/images/logo.png"
-
+import Slide from '@material-ui/core/Slide';
+import {ChevronLeft, ChevronRight} from '@material-ui/icons';
+import CarrouselSlide from '../../components/CarrouselSlide';
 
 import './style.css';
+import Utiles from '../../hooks/utils';
 
 const useStyles = makeStyles((theme) => ({
     icon: {
@@ -72,6 +75,15 @@ const useStyles = makeStyles((theme) => ({
     },
     imagenPequeña : {
         borderRadius: "60px 60px 60px 60px"
+    },
+    overflowHidden: {
+        overflow: 'hidden',
+    },
+    divSinNoticias: {
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        margin: '20% auto'
     }
 }));
 
@@ -174,7 +186,7 @@ function Landing() {
                                         />
                                         <Typography variant="h6">Disfruta</Typography>
                                         <Typography>
-                                            Disfrutal del placer de ser un entrenador de un auténtico 
+                                            Disfruta del placer de ser un entrenador de un auténtico 
                                             equipo de baloncesto, dirigiendolo como mejor te parezca. 
                                         </Typography>
                                     </Paper>
@@ -205,21 +217,72 @@ function Landing() {
     );
 }
 
+function Arrow(props) {
+    const {direction, clickFunction} = props;
+    const icon = direction === 'left' ? <ChevronLeft/> : <ChevronRight/>;
+
+    return (
+        <div id={'arrow-' + direction} onClick={clickFunction}>
+            {icon}
+        </div>
+    );
+}
+
 function AuthenticatedHome(props) {
     const classes = useStyles();
-    const [paymentSuccess, setPaymentSuccess] = useState(props.history?.location.state?
-        props.history.location.state.data : false)
-    const [location, setLocation] = useState();
-    const [error, setError] = useState(false);
+    const [notices, setNotices] = useState([]);
+    const [index, setIndex] = useState(0);
+    const [noticesLength, setNoticesLength] =  useState(0);
+    const [slideIn, setSlideIn] = useState(true);
+    const [slideDirection, setSlideDirection] = useState('down');
+    const [open, setOpen] = useState(false);
+    const notice = notices && notices.length > 0 ? notices[index] : null;
+    let contieneUser = null; 
+    if(!(notice === null || notice === undefined)) {
+        contieneUser = notice.users.filter(user => user._id === props.user.id).length > 0 ? true : false;
+    }
 
-    const handleSnackbarClose = (event, reason) => {
-        if (reason === 'clickaway') {
-            return;
+    useState(() => {
+        if(!(props.user.comunidad === undefined || props.user.comunidad === null)){
+            NoticeDataService.allNoticesForComunity(props.user.comunidad._id).then((res) => {
+                if(res.status === 200) { 
+                    let noticiasOrdenadas = res.data.sort(Utiles.compareNotices)
+                    setNotices(noticiasOrdenadas);
+                    setNoticesLength(res.data.length);
+                }
+            })
         }
-        setPaymentSuccess(false)
+    },[index]);
+
+    const onArrowClick = (direction) => {
+        const increment = direction === 'left' ? -1 : 1;
+        const newIndex = (index + increment + noticesLength) % noticesLength;
+        setIndex(newIndex);
+
+        const oppDirection = direction === 'left' ? 'right' : 'left';
+        setSlideDirection(direction);
+        setSlideIn(false);
+
+        setTimeout(() => {
+            setIndex(newIndex);
+            setSlideDirection(oppDirection);
+            setSlideIn(true);
+        }, 200);
     };
 
-    
+    const handleMarkAsShowed = () => {
+        NoticeDataService.markAsShow(props.user.id, notice._id).then((res) => {
+            if(res.status === 200) { 
+                console.log('Noticia actualizada');
+                const newNotices = notices; 
+                const indexOf = notices.findIndex(n => n._id === res.data._id);
+                newNotices.splice(indexOf, 1, res.data); 
+                setNotices(newNotices);
+                contieneUser = false;
+                onArrowClick('right');
+            }
+        })
+    }
 
     return (
         <div style={{marginBottom: "30px"}}>
@@ -227,13 +290,72 @@ function AuthenticatedHome(props) {
                 <CssBaseline/>
                 <div>
                     <Container>
-                        <div style={{marginTop: "30px"}}>
-                            <img style={{
-                                display: "block",
-                                marginLeft: "auto",
-                                marginRight: "auto"
-                            }} alt="logo" src={Logo} width="35%" height="35%"/>
-                        </div>
+                        <Grid container spacing={3} alignItems="center" justify="center" align='center' >
+                            <Grid item xs={12} md={6} lg={6}>    
+                                <div style={{marginTop: "30px"}}>
+                                    <img style={{
+                                        display: "block",
+                                        marginLeft: "auto",
+                                        marginRight: "auto",
+                                        width:'50%',
+                                        height:'50%',
+                                        borderRadius:'125px',
+                                        marginTop: '20px'
+                                    }} alt="logo" src={Logo} width="35%" height="35%"/>
+                                </div>
+                            </Grid>
+                            <Grid item xs={12} md={12} lg={6}>
+                                {notices && notices.length > 0 ? (
+                                    <Grid
+                                        container
+                                        spacing={1}
+                                        alignItems="center"
+                                        justify="center"
+                                        className={classes.overflowHidden}
+                                    >
+                                        <Grid item xs={1} align={'center'}>
+                                            <Arrow
+                                                direction="left"
+                                                clickFunction={() => onArrowClick('left')}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={10} align={'center'}>
+                                            <Slide in={slideIn} direction={slideDirection}>
+                                                <div>
+                                                    <CarrouselSlide
+                                                        content={notice}
+                                                        open={open}
+                                                        user={props.user}
+                                                        contieneUser={contieneUser}
+                                                        clickFunction={() => handleMarkAsShowed()}
+                                                    />
+                                                </div>
+                                            </Slide>
+                                        </Grid>
+                                        <Grid item xs={1} align={'center'}>
+                                            <Arrow
+                                                direction="right"
+                                                clickFunction={() => onArrowClick('right')}
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                    ) 
+                                    :
+                                    (
+                                    <div className={classes.divSinNoticias}align="center">
+                                        <Typography
+                                            align='center'
+                                            variant="h6" 
+                                            color="textSecondary"
+                                            paragraph
+                                            >
+                                            No tienes noticias sin leer disponibles
+                                        </Typography>
+                                    </div>
+                                    )
+                                }
+                            </Grid>
+                        </Grid>
                         <div className={classes.logContainer}>
                             <div className="typo">
                                 <Typography
@@ -241,8 +363,18 @@ function AuthenticatedHome(props) {
                                     align="center"
                                     color="textSecondary"
                                     paragraph
-                                >
+                                    >
                                     Bienvenido a BlackMamba
+                                </Typography>
+                                <Typography
+                                    variant="p" 
+                                    component="body"
+                                    align="center"
+                                    color="textSecondary"
+                                    paragraph
+                                    >
+                                        Las mejor plataforma de juego de baloncesto.<br></br> Conectate con todos tus amigos dentro de una competición, 
+                                        disfruta del placer de ser un entrenador de un auténtico equipo de baloncesto. 
                                 </Typography>
                             </div>
                         </div>
@@ -258,22 +390,21 @@ function AuthenticatedHome(props) {
 
 
 export default function Home(props) {
-    const {isLogged} = useUser();
     const history = useHistory()
     const auth = JSON.parse(sessionStorage.getItem('user')) != null ? JSON.parse(sessionStorage.getItem('user')) : null;
     useEffect(() => {
-        if(auth != null){
+        if(auth != null && auth.rol !== 'ADMINISTRADOR'){
             TeamDataService.getTeam(auth.id).then((res) => {
                 if(res.data === ""){
                     history.push('/createTeam');
                 }
             })
         }
-    })
+    },[])
 
 
     return Boolean(auth) ? (
-        <AuthenticatedHome history={props.history} />
+        <AuthenticatedHome history={props.history} user={auth}/>
     ) : (
         <Landing></Landing>
     );

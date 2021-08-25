@@ -9,7 +9,6 @@ import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import LastPageIcon from '@material-ui/icons/LastPage';
 import { useHistory } from 'react-router'
-import useUser from '../../hooks/useUser'
 import createComunidadImg from "../../static/images/createComunidad.png"
 import joinComunityImg from "../../static/images/joinComunity.jpg"
 import ComunityDataService from "../../services/Comunidad/comunity.service"
@@ -94,7 +93,6 @@ export default function ManageComunity() {
     const [comunity, setComunity] = useState({})
     const [comunitySelected, setComunitySelected] = useState({}) //The comunity we want to Join
     const [comunities, setComunities] = useState([]);
-    const [comunityFull, setComunityFull] = useState(false);
     const [type, setType] = useState('')
     const [password, setPassword] = useState('')
     const [openModalPassword, setOpenModalPassword] = useState(false);
@@ -105,9 +103,8 @@ export default function ManageComunity() {
     const [openSubmitIncorrect, setOpenSubmitIncorrect] = useState(false);
     const [showModalIncorrectPasswordComunity, setShowModalIncorrectPasswordComunity] = useState(false);
     const history = useHistory()
-    const {currentComunity,setCurrentComunity} = useContext(Context);
+    const {setCurrentComunity} = useContext(Context);
     let auth = JSON.parse(window.sessionStorage.getItem('user'));
-    const admin = auth.rol === "USER"
     const [errors, setErrors] = useState({})
 
     // Paginación tabla de comunidades
@@ -131,7 +128,7 @@ export default function ManageComunity() {
                 history.push('/')
             }
         }
-    }, [admin, history])
+    }, [history,auth])
 
     useEffect(() => {
         setLoading(true);

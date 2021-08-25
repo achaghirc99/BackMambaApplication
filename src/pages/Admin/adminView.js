@@ -9,7 +9,9 @@ import joinComunityImg from "../../static/images/joinComunity.jpg"
 import clsx from 'clsx';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import TeamDataService from "../../services/Team/team.service";
-
+import AdminDataService from "../../services/Admin/admin.service";
+import useUser from '../../hooks/useUser';
+import {useHistory} from 'react-router';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -92,9 +94,12 @@ export default function AdminView() {
     const classes = useStyles();
     const [loading, setLoading] = useState(false)
     const [expanded, setExpanded] = useState(false);
+    const [showRefreshMarketCorrect, setShowRefreshMarketCorrect] = useState(false);
+    const [showRefreshMarketIncorrect, setShowRefreshMarketIncorrect] = useState(false);
     const [errors, setErrors] = useState({})
     const [jornada, setJornada] = useState();
-    
+    const {auth} = useUser();
+    const history = useHistory();
     const handleExpandClick = () => {
       setExpanded(!expanded);
     };
@@ -103,23 +108,64 @@ export default function AdminView() {
       setJornada(parseInt(event.target.value));
     };
 
-    const generarJornada = () => {
-            setLoading(true);
-            TeamDataService.cargarPuntosJornada(jornada).then((result1) => {
-                if(result1.status === 200){
-                    TeamDataService.actualizaJugadoresComunidad(jornada).then((res) => {
-                        if(res.status === 200){
-                            TeamDataService.actualizaJugadoresEquipo(jornada).then((res) => {
-                                if(res.status === 200){
-                                    console.log("Todo realizado correctamente");
-                                    setLoading(false);
-                                }
-                            })
-                        }
-                    })
-                }
-            })
+    
+    useState(() => {
+        if(!auth) {
+            history.push("/")
         }
+        if(auth.rol !== 'ADMINISTRADOR'){
+            history.push("/")
+        }
+    }, [])
+
+    const generarJornada = () => {
+        setLoading(true);
+        TeamDataService.cargarPuntosJornada(jornada).then((result1) => {
+            if(result1.status === 200){
+                TeamDataService.actualizaJugadoresComunidad(jornada).then((res) => {
+                    if(res.status === 200){
+                        TeamDataService.actualizaJugadoresEquipo(jornada).then((res) => {
+                            if(res.status === 200){
+                                console.log("Todo realizado correctamente");
+                                setLoading(false);
+                            }
+                        })
+                    }
+                })
+            }
+        })
+    }
+    const refreshMarket = () => {
+        setLoading(true);
+        AdminDataService.refreshMarkets().then((res) => {
+            if(res.status === 200) {
+                setShowRefreshMarketCorrect(true);
+            }else {
+                setShowRefreshMarketIncorrect(true);
+            }
+        })
+        setLoading(false);
+    }
+    const manageOffers = () => {
+        setLoading(true);
+        AdminDataService.manageAdminOffers().then((res) => {
+            if(res.status === 200) {
+                setShowRefreshMarketCorrect(true);
+            }else {
+                setShowRefreshMarketIncorrect(true);
+            }
+        })
+        setLoading(false);
+    }
+    
+    const handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setShowRefreshMarketCorrect(false);
+        setShowRefreshMarketIncorrect(false);
+      };
+
 
     return (
             <Container className={classes.containerCards}>
@@ -164,7 +210,7 @@ export default function AdminView() {
                     </Grid>
                     <Grid align="center" item xs={12} sm={3} md={4} >  
                         <Card variant="outlined">
-                          <ButtonBase className={classes.cardAction} onClick={() => console.log()}>
+                          <ButtonBase className={classes.cardAction} onClick={() => manageOffers()}>
                           <CardActionArea>
                               <CardMedia
                                 component="img"
@@ -184,7 +230,7 @@ export default function AdminView() {
                     </Grid>
                     <Grid align="center" item xs={12} sm={3} md={4} >  
                         <Card variant="outlined">
-                          <ButtonBase className={classes.cardAction} onClick={() => console.log()}>
+                          <ButtonBase className={classes.cardAction} onClick={() => refreshMarket()}>
                           <CardActionArea>
                               <CardMedia
                                 component="img"
@@ -246,6 +292,16 @@ export default function AdminView() {
                 <Backdrop className={classes.backdrop} open={loading}>
                    <CircularProgress className={classes.circularStyle}/>
                 </Backdrop>
+                <Snackbar open={showRefreshMarketCorrect} autoHideDuration={6000} onClose={handleClose}>
+                    <Alert onClose={handleClose} severity="info">
+                        Se ha refrescado correctamente el mercado de las comunidades.
+                    </Alert>
+                </Snackbar>
+                <Snackbar open={showRefreshMarketIncorrect} autoHideDuration={6000} onClose={handleClose}>
+                    <Alert onClose={handleClose} severity="error">
+                        No se ha refrescado correctamente el mercado de las comunidades.
+                    </Alert>
+                </Snackbar>
             </Container>
     )
 }

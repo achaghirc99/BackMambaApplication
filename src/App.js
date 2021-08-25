@@ -8,7 +8,6 @@ import { Switch, Route } from 'react-router-dom'
 import { makeStyles, createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 import useUser from './hooks/useUser';
 import Home from './pages/Home';
-import Comunity from './pages/Comunity/comunity';
 import BottomBar from './components/SimpleBottomNavigation';
 import ManageComunity from './pages/Comunity/comunity';
 import CreateTeam from './pages/Team/createTeam';
@@ -16,6 +15,8 @@ import TeamDetails from './pages/Team/teamDetails';
 import ComunityDetails from './pages/Comunity/comunityDetails';
 import ComunityConfig from './pages/Comunity/comunityConfig';
 import AdminView from './pages/Admin/adminView';
+import Market from './pages/Market/market';
+import Profile from './pages/Profile/profile';
 
 const drawerWidth = 240
 
@@ -102,6 +103,7 @@ function App() {
           <Switch>
             <Route exact path={'/'} component={Home}/>
             <Route exact path={'/admin'} component={AdminView}/>
+            <Route exact path={'/profile'} component={Profile}/>
             <Route exact path={'/login'} component={Login} />
             <Route exact path={'/signup'} component={Signup} />
             <Route exact path={'/community'} component={ManageComunity} />
@@ -109,6 +111,7 @@ function App() {
             <Route exact path={'/team'} component={TeamDetails} />
             <Route exact path={'/yourComunity'} component={ComunityDetails} />
             <Route exact path={'/comunityConfig'} component={ComunityConfig} />
+            <Route exact path={'/market'} component={Market} />
           </Switch>
         </main>
         <div className={classes.colorBar}>

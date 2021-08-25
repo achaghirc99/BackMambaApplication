@@ -29,7 +29,7 @@ const useStyles = makeStyles((theme) => ({
 
 
 export default function Header(props) {
-  const { isLogged, logout, auth } = useUser()
+  const { isLogged, logout } = useUser()
   const { classes } = props
   const classes2 = useStyles();
 

@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useContext} from 'react'
+import React, { useState, useEffect} from 'react'
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles'
 import {useHistory} from 'react-router'
-import { Card, CardContent, Typography, Container, CardMedia, CardActionArea, CardHeader, Avatar, IconButton, CardActions, Collapse, Popover, Snackbar } from '@material-ui/core';
+import { Card, CardContent, Typography, CardMedia, CardHeader, Avatar, IconButton, CardActions, Collapse, Popover, Snackbar } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import siluetaBasket from '../static/images/siluetaBasket.jpg';
 import TeamDataService from '../services/Team/team.service';
 import DeleteSweepIcon from '@material-ui/icons/DeleteSweep';
 import CompareArrowsIcon from '@material-ui/icons/CompareArrows';
 import Alert from '@material-ui/lab/Alert';
+import Utiles from '../hooks/utils'
 const useStyles = makeStyles((theme) => ({
     root: {
         maxWidth: 345,
@@ -58,7 +59,10 @@ const useStyles = makeStyles((theme) => ({
         width : "100%"
     },
     imageMedia2 : {
-        height: "0%"
+        height: "0%",
+        filter : 'brightness(1.1)',
+        mixBlendMode: 'multiply',
+        background: 'transparent'
     },  
     alero: {
         backgroundColor: '#32ab62',
@@ -103,17 +107,19 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor:'#ff3b00f2'
     }
     }));
-export default function PlayersCard(props) {
+export default function PlayersCard(...props) {
     const classes = useStyles();
-    const [players, setPlayers] = useState([]);
     const [team, setTeam] = useState();
     const history = useHistory()
-    const {_id,name, playerImg, position, realTeam,realTeamImg, transferValue, points} = props
-    const puntuations = props.puntuations.slice(-5);
-    const [status, setStatus] = useState(props.status);
+    const {_id,name, playerImg, position, realTeam, transferValue, points} = props[0].player
+    const puntuations = props[0].player.puntuations.slice(-5);
+    const [status, setStatus] = useState(props[0].player.status);
+    const [playersOnMarket, setPlayersOnMarket] = useState(props[0].playersOnMarket);
+    const [comuMaxPlayersUserMarket, setComuMaxPlayersUserMarket] = useState(props[0].comuMaxPlayersUserMarket);
     const [expanded, setExpanded] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [showSuccessStatusChange, setShowSuccessStatusChange] = useState(false);
+    const [showLimitPlayersOnMarket, setShowLimitPlayersOnMarket] = useState(false);
    
     const handlePopoverOpen = (event) => {
       setAnchorEl(event.currentTarget);
@@ -134,16 +140,32 @@ export default function PlayersCard(props) {
 
     const actualizaJugadorATranseferible = (_id,status) => {
       const idTeam = team._id;
-      TeamDataService.actualizaJugadorDelEquipo(idTeam,_id,status).then((res) => {
-        setStatus(status);
-        setShowSuccessStatusChange(true);
+      if(status === 'Transferible'){
+        if(playersOnMarket < comuMaxPlayersUserMarket){
+          TeamDataService.actualizaJugadorDelEquipo(idTeam,_id,status).then((res) => {
+            let playersOnMarketYet = res.data.players.filter(player => player.status === 'Transferible').length;    
+            setPlayersOnMarket(playersOnMarketYet);
+            setStatus(status);
+            setShowSuccessStatusChange(true);
+          })
+        }else {
+          setShowLimitPlayersOnMarket(true)
+        }
+      }else{
+        TeamDataService.actualizaJugadorDelEquipo(idTeam,_id,status).then((res) => {
+          let playersOnMarketYet = res.data.players.filter(player => player.status === 'Transferible').length;    
+          setPlayersOnMarket(playersOnMarketYet);
+          setStatus(status);
+          setShowSuccessStatusChange(true);
       })
     }
+  }
     const handleClose = (event, reason) => {
       if (reason === 'clickaway') {
           return;
       }
       setShowSuccessStatusChange(false);
+      setShowLimitPlayersOnMarket(false);
     };
 
     const positionColor = position === "A" ? classes.alero : position === "B" ? classes.base : position === "E" ? classes.escolta : position === "AP" ? classes.alaPivot : position === "P" ? classes.pivot : null;
@@ -222,9 +244,14 @@ export default function PlayersCard(props) {
                       </Avatar>
                     }
                     action={
-                      <Avatar aria-label="recipe">
-                        {points}
-                      </Avatar>
+                      points < 0 ? 
+                        <Avatar aria-label="recipe" className={classes.avatarPointsNegative}>
+                          {points}
+                        </Avatar>
+                        :
+                        <Avatar aria-label="recipe" className={classes.avatarPointsPositive}>
+                          {points}
+                        </Avatar>
                     }
                     title={name}
                     subheader={realTeam}
@@ -239,7 +266,7 @@ export default function PlayersCard(props) {
                 />
                 <CardContent align="center">
                     <Typography variant="h5" component="h2">
-                      Valor {transferValue} €
+                      Valor {Utiles.formatoES(transferValue)}€
                     </Typography>
                     <Typography variant="body2" component="p">
                       {status === "ConEquipo" ? 'Con equipo' : status === "Transferible" ? 'Transferible' : 'Libre'}
@@ -280,6 +307,11 @@ export default function PlayersCard(props) {
             <Snackbar open={showSuccessStatusChange} autoHideDuration={6000} onClose={handleClose}>
                 <Alert onClose={handleClose} severity="info">
                     Jugador cambiado de estado correctamente
+                </Alert>
+            </Snackbar>
+            <Snackbar open={showLimitPlayersOnMarket} autoHideDuration={6000} onClose={handleClose}>
+                <Alert onClose={handleClose} severity="info">
+                    Ya has alcanzado el límite de {comuMaxPlayersUserMarket} jugadores en el mercado.
                 </Alert>
             </Snackbar>
         </div>

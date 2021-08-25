@@ -4,7 +4,7 @@ import * as authService from '../services/Authentication/auth'
 import { useHistory } from 'react-router'
 
 export default function useUser() {
-    const { auth, setAuth, currentComunity, setCurrentComunity,currentTeam, setCurrentTeam} = useContext(Context)
+    const { auth, setAuth, currentComunity, setCurrentComunity} = useContext(Context)
     const [state, setState] = useState({ loading: false, error: false })
     const [isUpdate, setUpdate] = useState(false)
     
@@ -17,10 +17,14 @@ export default function useUser() {
                 const user = res.dataUser;
                 window.sessionStorage.setItem('user', JSON.stringify(user))
                 setState({ loading: false, error: false })
-                if(user.comunidad){
+                
+                if(user.rol === 'ADMINISTRADOR'){
+                    setAuth(user);
+                    history.push("/admin");
+                }else if(user.comunidad){
                     setCurrentComunity(user.comunidad);
                     setAuth(user)
-                }else{
+                }else {
                     history.push("/community")
                 }
                 
@@ -35,7 +39,7 @@ export default function useUser() {
                     history.push("/pageNotFound")
                 }
             })
-    }, [setAuth, history])
+    }, [setAuth, history,setCurrentComunity])
 
     const signup = useCallback(({ nickName, email, rol, password, firstName, lastName }) => {
         setState({ loading: true, error: false })

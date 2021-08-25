@@ -72,7 +72,7 @@ const useStyles = makeStyles((theme) => ({
 export default function SignUp() {
     const classes = useStyles();
     const history = useHistory();
-    const [loading, setLoading] = useState(false)
+    const [loading] = useState(false)
     const [formData, setFormData] = useState({})
     const [checkData, setCheckData] = useState({})
     const [formErrors, setFormErrors] = useState({})

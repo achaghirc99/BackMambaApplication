@@ -35,6 +35,10 @@ class TeamDataService {
         return http.get(`/equipo/getEquipo/${idComunidad}`,{headers: authHeader()});
     }
     
+    getJourneysForTeam(idTeam) {
+        return http.get(`/equipo/jornadasEquipo/${idTeam}`,{headers: authHeader()});
+    }
+    
     cargarPuntosJornada(jornada) {
         return http.get(`/jugadores/cargarPuntosJornada/${jornada}`,{headers: authHeader()});
     }
@@ -50,9 +54,9 @@ class TeamDataService {
         return http.put(`/jugadores/actualizaJugadorDelEquipo/${idTeam}/${idPlayer}/${status}`,{headers: authHeader()});
     }
 
-    getTeamImage(idImagen) {
-        return http.get(`/equipo/getImagen/${idImagen}`,{headers: authHeader()});
-    }
+
+
+
 }
 
 export default new TeamDataService();

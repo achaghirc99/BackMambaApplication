@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext} from 'react'
 import TeamDataService from "../../services/Team/team.service"
 import { makeStyles } from '@material-ui/core/styles'
 import Alert from '@material-ui/lab/Alert'
-import { TextField, Button, Snackbar, Container, Grid, Typography, InputLabel, Input, Modal, Avatar } from '@material-ui/core'
+import { TextField, Button, Snackbar, Container, Grid, Typography, Modal, Avatar } from '@material-ui/core'
 import { useHistory } from 'react-router'
 import {Backdrop, CircularProgress} from "@material-ui/core";
 import Context from '../../context/UserContext'
@@ -18,7 +18,10 @@ import img9 from '../../static/images/teamImages/miamiSnorks.png';
 import img10 from '../../static/images/teamImages/vancouver.png';
 import img11 from '../../static/images/teamImages/washingtonGijoes.png';
 import img12 from '../../static/images/teamImages/woodlandSmurf.png';
+import img13 from '../../static/images/teamImages/logo.png';
 import comunityService from '../../services/Comunidad/comunity.service'
+import { AlertTitle } from '@material-ui/lab'
+import { red } from '@material-ui/core/colors'
 
 function rand() {
     return Math.round(Math.random() * 20) - 10;
@@ -85,12 +88,12 @@ export default function CreateTeam() {
     const [state, setState] = useState('')
     const [images, setImages] = useState('')
     const [allImages, setAllImages] = useState([])
-    const [fileName, setFileName] = useState('');
     const [openSubmitIncorrect, setOpenSubmitIncorrect] = useState(false)
     const history = useHistory()
     const {setCurrentTeam, setAuth } = useContext(Context)
     const auth = JSON.parse(sessionStorage.getItem('user')) !== undefined ? JSON.parse(sessionStorage.getItem('user')) : "";
     const [errors, setErrors] = useState({});
+    const [error, setError] = useState(false);
     const [openModalImages, setOpenModalImages] = useState(false);
     
     useEffect(() => {
@@ -118,7 +121,7 @@ export default function CreateTeam() {
             })
         }
 
-    }, [history])
+    }, [history,auth])
 
     useEffect(() => {
         const images = [];
@@ -134,6 +137,7 @@ export default function CreateTeam() {
         images.push(img10);
         images.push(img11);
         images.push(img12);
+        images.push(img13);
         const random = getRandomArbitrary(0,13);
         setAllImages(images);
         setImages(images[random]);
@@ -150,17 +154,22 @@ export default function CreateTeam() {
             }
 
             TeamDataService.createTeam(object,auth.id, auth.comunidad._id).then(response => {
-                TeamDataService.insertEquipoEnComnunidad(auth.comunidad._id, response.data._id).then(res => {
-                    if (response.status === 200 && res.status === 200) {
-                        sessionStorage.setItem("team", JSON.stringify(response.data));
-                        setCurrentTeam(response.data);
-                        setAuth(auth)
-                        history.push({ pathname: '/' , state: { data: true } });    
-                    } else {
-                        setOpenSubmitIncorrect(true)
-                        console.log(response.data);
-                    }
-                }) 
+                if(response.status === 200){            
+                    TeamDataService.insertEquipoEnComnunidad(auth.comunidad._id, response.data._id).then(res => {
+                        if (response.status === 200 && res.status === 200) {
+                            sessionStorage.setItem("team", JSON.stringify(response.data));
+                            setCurrentTeam(response.data);
+                            setAuth(auth)
+                            history.push({ pathname: '/' , state: { data: true } });    
+                        } else {
+                            setOpenSubmitIncorrect(true)
+                            console.log(response.data);
+                        }
+                    }) 
+                }else {
+                    setLoading(false);
+                    setError(true);
+                }
             }).catch(error => {
                 console.log("Error" + error)
             })
@@ -180,6 +189,7 @@ export default function CreateTeam() {
     }
 
     const handleChange = (event) => {
+        setError(false);
         setState({ ...state, [event.target.name]: event.target.value });
     }
 
@@ -231,14 +241,14 @@ export default function CreateTeam() {
                         <Grid container justify="center" alignItems="center" >
                             <Grid item>
                                 <div>
-                                  <img className={classes.imagen} alt={"image"} src={images} onClick={() => setOpenModalImages(true)} />
+                                  <img className={classes.imagen} alt="teamImage" src={images} onClick={() => setOpenModalImages(true)} />
                                 </div>
                                 <input type="hidden" id="image"  name="image" value={images} />
                             </Grid> 
                             <Grid item>
                                 <div>
                                     <TextField className='input-title' id="name" label="Nombre"
-                                        helperText={errors.name} name="name" onChange={(e) => handleChange(e)} />
+                                        helperText={error && (<p style={{color: red[500]}}>UPS.Lo sentimos este nombre <br></br>ya ha sido seleccionado</p>)} name="name" onChange={(e) => handleChange(e)} />
                                 </div>
                             </Grid>            
                         </Grid>

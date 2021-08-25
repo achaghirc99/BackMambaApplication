@@ -1,21 +1,18 @@
-import React, {useEffect } from 'react'
+import React, {useEffect, useState } from 'react'
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles'
 import {Typography } from '@material-ui/core'
-import TeamDetailsPanel from "./teamPanel";
-import PlayersDetailsPanel from "./playersPanel";
-import AlignementPanel from "./alignementPanel";
+import Offers from "./offers";
+import {MarketPlayers} from "./marketPlayers";
 import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
-import GroupOutlinedIcon from '@material-ui/icons/GroupOutlined';
-import EmojiPeopleOutlinedIcon from '@material-ui/icons/EmojiPeopleOutlined';
-import SportsBasketballOutlinedIcon from '@material-ui/icons/SportsBasketballOutlined';
+import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
+import MonetizationOnIcon from '@material-ui/icons/MonetizationOn';
 import Box from '@material-ui/core/Box';
 import {useHistory} from 'react-router'
 import TeamDataService from '../../services/Team/team.service'
 import useUser from '../../hooks/useUser';
-import backgroundBasketCourt from "../../static/images/basketballCourtBlack.jpg"
 
 
 function TabPanel(props) {
@@ -70,34 +67,28 @@ const useStyles = makeStyles((theme) => ({
     width: '90%',
     backgroundColor: theme.palette.background.paper,
   },
-  fondoBasket: {
-    background: `url(${backgroundBasketCourt}) no-repeat center center fixed`,
-    backgroundSize : '33%'
-  },
-
   styleTabBar: {
     backgroundImage: 'linear-gradient(45deg, #f17306 70%, #000000 80%)',
     
   }
 }));
 
-
-
-
-export default function TeamDetails(props) {
+export default function Market(props) {
     const classes = useStyles();
     const [value, setValue] = React.useState(0);
     const history = useHistory();
     const {auth} = useUser();
+    const [team, setTeam] = useState();
     useEffect(() => {
       if(auth){
           TeamDataService.getTeam(auth.id).then((res) => {
             sessionStorage.setItem("team", JSON.stringify(res.data));
+            setTeam(res.data);
           })
       }else{
           history.push('/signup');
       }
-  },[auth,history])
+  },[history,auth])
 
     const handleChange = (event, newValue) => {
       setValue(newValue);
@@ -113,19 +104,15 @@ export default function TeamDetails(props) {
             aria-label="nav tabs example"
             className={classes.styleTabBar}
           >
-            <LinkTab icon={<GroupOutlinedIcon />} label="Equipo" href="/drafts" {...a11yProps(0)} />
-            <LinkTab icon={<EmojiPeopleOutlinedIcon />} label="Jugadores" href="/trash" {...a11yProps(1)} />
-            <LinkTab icon={<SportsBasketballOutlinedIcon />} label="Alineación" href="/spam" {...a11yProps(2)} />
+            <LinkTab icon={<AddShoppingCartIcon />} label="Mercado" href="/drafts" {...a11yProps(0)} />
+            <LinkTab icon={<MonetizationOnIcon />} label="Ofertas" href="/trash" {...a11yProps(1)} />
           </Tabs>
         </AppBar>
         <TabPanel value={value} index={0}>
-          <TeamDetailsPanel props={props} />
+          <MarketPlayers {...team} />
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <PlayersDetailsPanel props={props} />
-        </TabPanel>
-        <TabPanel value={value} index={2}>
-          <AlignementPanel props={props} />
+          <Offers {...team} />
         </TabPanel>
       </div>
     );

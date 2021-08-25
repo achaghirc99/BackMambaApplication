@@ -1,20 +1,9 @@
-import React, {useState, useEffect, useContext} from "react"
-import { makeStyles, TextField, Grid, withStyles, Typography, InputLabel, FormControl, Select, MenuItem, Avatar, Button, CardActions, CircularProgress, Backdrop, Card, Snackbar } from "@material-ui/core";
+import React, {useState, useEffect} from "react"
+import { makeStyles, TextField, Grid, Typography, InputLabel, FormControl, Select, MenuItem, Button, CircularProgress, Backdrop, Card, Snackbar } from "@material-ui/core";
 import Alert from '@material-ui/lab/Alert';
 import useUser from "../../hooks/useUser";
 import {useHistory} from "react-router-dom";
 import ComunidadDataService from "../../services/Comunidad/comunity.service";
-import TeamDataService from "../../services/Team/team.service";
-import Utiles from "../../hooks/utils";
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
-import DeleteSweepIcon from '@material-ui/icons/DeleteSweep';
-import SettingsIcon from '@material-ui/icons/Settings';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -188,7 +177,7 @@ export default function ComunityConfig(props) {
 
     const handleSubmitComunity = () => {
         ComunidadDataService.updateComunity(comunity).then(res => {
-           if(res.status == 200) {
+           if(res.status === 200) {
                setOpenSuccess(true);
            };
         });
@@ -199,7 +188,7 @@ export default function ComunityConfig(props) {
     return (
         <div style={{ maxWidth: 1400, margin: '50px auto', marginBottom: "10%" }}>
             <Grid component={Card} container spacing={3} style={{ marginTop: '50px', backgroundColor:'#acacac2e'}}>
-                <Grid item style={{ marginTop: '10px' }} align="center" sm={12}>\
+                <Grid item style={{ marginTop: '10px' }} align="center" sm={12}>
                     <div className = {classes.divTitle}>
                         <Typography variant="h4" component="h2">
                             {comunity.name}

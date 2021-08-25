@@ -1,10 +1,9 @@
 import React, {useState, useEffect, useContext} from "react"
-import { makeStyles, Grid, withStyles, Typography, Card, CardHeader, CardContent, Badge, Avatar, Button, CardActions, CircularProgress, Backdrop, Modal } from "@material-ui/core";
+import { makeStyles, Grid, withStyles, Typography, Card, CardHeader, CardContent, Badge, Avatar, Button, CardActions, CircularProgress, Backdrop, Modal, Tooltip } from "@material-ui/core";
 import useUser from "../../hooks/useUser";
 import {useHistory} from "react-router-dom";
 import ComunidadDataService from "../../services/Comunidad/comunity.service";
 import TeamDataService from "../../services/Team/team.service";
-import ComunityConfig from "./comunityConfig";
 import Utiles from "../../hooks/utils";
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -16,6 +15,9 @@ import Paper from '@material-ui/core/Paper';
 import DeleteSweepIcon from '@material-ui/icons/DeleteSweep';
 import SettingsIcon from '@material-ui/icons/Settings';
 import Context from "../../context/UserContext";
+import SyncAltIcon from '@material-ui/icons/SyncAlt';
+import {SmallAvatarPositive, SmallAvatarNegative, MyAvatar} from '../../components/SmallAvatars';
+
 
 const StyledTableCell = withStyles((theme) => ({
   head: {
@@ -33,27 +35,11 @@ const StyledTableRow = withStyles((theme) => ({
     },
   },
 }))(TableRow);
-const SmallAvatar = withStyles((theme) => ({
-    root: {
-      width: 25,
-      height: 25,
-      border: `1px solid ${theme.palette.warning.light}`,
-    },
-  }))(Avatar);
-const SmallAvatarPosition = withStyles((theme) => ({
-    root: {
-      width: 25,
-      height: 25,
-      border: `1px solid ${theme.palette.warning.light}`,
-      backgroundColor: "#fafafa",
-      color: theme.palette.warning.dark
-    },
-  }))(Avatar);
 
 const useStyles = makeStyles((theme) => ({
     table: {
         minWidth: 100,
-        background: "linear-gradient(90deg, #ff760061 70%, #f27407 80%)"
+        background: 'linear-gradient(180deg, #cdc9c961 70%, #00000042 80%)',
     },
     paper: {
         display: 'flex',
@@ -64,6 +50,13 @@ const useStyles = makeStyles((theme) => ({
           height: theme.spacing(8),
         },
        
+    },
+    paper2: {
+        padding: theme.spacing(1),
+        background: 'linear-gradient(180deg, #cdc9c961 70%, #00000042 80%)',
+        filter: `alpha(opacity=30)`,
+        maxWidth: '75%',
+        margin: '10px auto'
     },
     paperAdvise: {
         position: 'absolute',
@@ -91,8 +84,10 @@ const useStyles = makeStyles((theme) => ({
         margin: "40px auto"
     },
     avatarPlayer: {
-        height:theme.spacing(15),
-        width:theme.spacing(15),
+        height:theme.spacing(8),
+        width:theme.spacing(8),
+        filter : 'brightness(1.1)',
+        mixBlendMode: 'multiply'
     }, 
     gridPlayers: {
         padding: "30px"
@@ -121,6 +116,36 @@ const useStyles = makeStyles((theme) => ({
     },
     circularStyle : {
         color: theme.palette.warning.dark
+    },
+    avatarPlayer: {
+        height:theme.spacing(12),
+        width:theme.spacing(12),
+        objectFit: "fill",
+        filter : 'brightness(1.1)',
+        mixBlendMode: 'multiply',
+        marginRight: '10px'
+    }, 
+    realTeamImg: { 
+        zIndex: '1',
+        right: '20px',
+        boxSizing: 'content-box',
+        filter : 'brightness(1.1)',
+        mixBlendMode: 'multiply',
+        marginLeft:'7px'
+    },
+    playerJourneyPoints :{
+        display : 'flex', 
+        marginLeft:'6px',
+        alignItems: 'center'
+    },
+    playerName: {
+        display : 'flex', 
+        alignItems: 'center'
+    },
+    playerPosition: {
+        display : 'flex', 
+        alignItems: 'center',
+        marginLeft: '15px'
     }
 }))
 
@@ -138,6 +163,8 @@ export default function ComunityDetails(props) {
     const [openModalAdvise, setOpenModalAdvise] = useState(false);
     const [idTeamToDelete, setIdTeamToDelete] = useState();
     const [nickNameToDelete, setNickNameToDelete] = useState();
+    const team = JSON.parse(sessionStorage.getItem('team')); 
+
     useEffect(() => {
         if(!auth) {
             history.push('/signup')
@@ -168,7 +195,7 @@ export default function ComunityDetails(props) {
                 }
                 })
         }
-    }, [history, auth])
+    }, [history, auth, setAuth])
 
     const deleteTeamByIdAndExitComunity = (idTeam, nickName) => {
         if (ownerLogeado && (owner.nickName === nickName)){
@@ -222,7 +249,7 @@ export default function ComunityDetails(props) {
     return (
         <div style={{ maxWidth: 1400, margin: '50px auto', marginBottom: "10%" }}>
             <div className = {classes.divTitle}>
-                <Typography variant="h4" component="h2">
+                <Typography variant="h4" component="h2" style={{color: '#000000'}}>
                     {comunity.name}
                     {ownerLogeado && (
                         <Button  onClick = {() => history.push({
@@ -240,18 +267,18 @@ export default function ComunityDetails(props) {
                     Creada por {owner.firstName}
                 </Typography>
             </div>
-            <Grid container spacing={3}>
+            <Grid container spacing={3} style={{ maxWidth: 1100, margin: '50px auto', marginBottom: "10%" }}>
                 <Grid item xs={12} md={6}>
                     <TableContainer component={Paper}>
                         <Table className={classes.table} aria-label="customized table">
                           <TableHead>
-                            <TableRow>
-                                <StyledTableCell>Posición</StyledTableCell>
-                                <StyledTableCell align="left">Usuario</StyledTableCell>
-                                <StyledTableCell align="left">Equipo</StyledTableCell>
-                                <StyledTableCell align="left">Puntos</StyledTableCell>
+                            <TableRow >
+                                <StyledTableCell style={{color: '#000000'}}>Posición</StyledTableCell>
+                                <StyledTableCell style={{color: '#000000'}} align="left">Usuario</StyledTableCell>
+                                <StyledTableCell style={{color: '#000000'}} align="left">Equipo</StyledTableCell>
+                                <StyledTableCell style={{color: '#000000'}} align="left">Puntos</StyledTableCell>
                                 {ownerLogeado && (
-                                    <StyledTableCell align="left">Eliminar</StyledTableCell>     
+                                    <StyledTableCell style={{color: '#000000'}} align="left">Eliminar</StyledTableCell>     
                                 )
                                 }
                               
@@ -290,32 +317,45 @@ export default function ComunityDetails(props) {
                         <CardContent className={classes.containerMarketPlayers}>
                             <Grid container >
                                 {marketPlayers.map((player) => (
-                                    <Grid item align="center" justifyContent="center" xs={6} md={6} className = {classes.gridPlayers}>
-                                        <Typography variant="body2" component="p">
-                                            {player.team} 
-                                        </Typography>
-                                        <Badge
-                                            overlap="circle"
-                                            anchorOrigin={{
-                                                vertical: 'bottom',
-                                                horizontal: 'right',
-                                            }}
-                                            badgeContent={<SmallAvatar><p className={classes.pointsSize}>{player.points}</p></SmallAvatar>}
-                                        >
-                                            <Avatar className={classes.avatarPlayer} alt={player.name} src={player.playerImg} />
-                                        </Badge>
-                                        <Typography variant="body2" component="p">
-                                            <p>{player.name} <br></br>{player.transferValue}€</p> 
-                                            <SmallAvatarPosition><p className={classes.positionSize}>{player.position}</p></SmallAvatarPosition>
-                                        </Typography>
-                                       
+                                    <Grid item align="center" justifyContent="center" xs={12} md={12}>
+                                        <Paper className={classes.paper2}>
+                                            <div style={{display: 'flex'}}>
+                                                <MyAvatar variant='square' alt={player.name} src={player.playerImg} className={classes.avatarPlayer}/>
+                                                <Grid container>
+                                                    <Grid item xs={12} className={classes.playerJourneyPoints}>
+                                                        <Tooltip title={player.team.name} aria-label="add">
+                                                            <Avatar alt={player.name} src={player.team.image} className={classes.realTeamImg} /> 
+                                                        </Tooltip>
+                                                        <Typography variant='h6' className={classes.playerPosition}>
+                                                            Alero 
+                                                        </Typography>
+                                                        <Typography variant='h6' className={classes.playerPosition}>
+                                                            <SyncAltIcon />
+                                                        </Typography>
+                                                        <Typography variant='h6' className={classes.playerPosition}>
+                                                            <p style={{color: '#32ab62'}}>{Utiles.formatoES(player.transferValue)}€</p>
+                                                        </Typography>                  
+                                                    </Grid>
+                                                    <Grid item xs={12} className={classes.playerJourneyPoints}>
+                                                        {player.points < 0 ? 
+                                                            <MyAvatar className={classes.realTeamImg} style={{backgroundColor:'#ff3b00f2', marginLeft:'7px'}}>{player.points}</MyAvatar>
+                                                            :
+                                                            <MyAvatar className={classes.realTeamImg} style={{backgroundColor:'#32ab62', marginLeft:'7px'}}>{player.points}</MyAvatar>    
+                                                        }
+                                                        <Typography variant='h6' className={classes.playerName}>
+                                                            {player.name}
+                                                        </Typography>
+                                                    </Grid>
+                                                </Grid>
+                                            </div>
+                                        </Paper>
                                     </Grid>    
                                 ))
                                 }
                             </Grid>
                         </CardContent>
                         <CardActions className={classes.containerMarketPlayers}>
-                            <Button className={classes.botonVerMas}>Ver mas...</Button>
+                            <Button className={classes.botonVerMas} onClick={() => history.push('market')}>Ver mas...</Button>
                         </CardActions>
                     </Card>
                 </Grid>
