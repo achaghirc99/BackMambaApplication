@@ -373,7 +373,7 @@ function AuthenticatedHome(props) {
                                     color="textSecondary"
                                     paragraph
                                     >
-                                        Las mejor plataforma de juego de baloncesto.<br></br> Conectate con todos tus amigos dentro de una competición, 
+                                        La mejor plataforma de juego de baloncesto.<br></br> Conectate con todos tus amigos dentro de una competición, 
                                         disfruta del placer de ser un entrenador de un auténtico equipo de baloncesto. 
                                 </Typography>
                             </div>

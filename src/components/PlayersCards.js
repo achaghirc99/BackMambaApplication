@@ -119,6 +119,7 @@ export default function PlayersCard(...props) {
     const [expanded, setExpanded] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [showSuccessStatusChange, setShowSuccessStatusChange] = useState(false);
+    const [showErrorStatusChange, setShowErrorStatusChange] = useState(false);
     const [showLimitPlayersOnMarket, setShowLimitPlayersOnMarket] = useState(false);
    
     const handlePopoverOpen = (event) => {
@@ -138,15 +139,19 @@ export default function PlayersCard(...props) {
       }, [history])
 
 
-    const actualizaJugadorATranseferible = (_id,status) => {
+    const actualizaJugadorATranseferible = (_id,status,playerName) => {
       const idTeam = team._id;
       if(status === 'Transferible'){
         if(playersOnMarket < comuMaxPlayersUserMarket){
           TeamDataService.actualizaJugadorDelEquipo(idTeam,_id,status).then((res) => {
-            let playersOnMarketYet = res.data.players.filter(player => player.status === 'Transferible').length;    
-            setPlayersOnMarket(playersOnMarketYet);
-            setStatus(status);
-            setShowSuccessStatusChange(true);
+            if(res.status === 200) {
+              let playersOnMarketYet = res.data.players.filter(player => player.status === 'Transferible').length;    
+              setPlayersOnMarket(playersOnMarketYet);
+              setStatus(status);
+              setShowSuccessStatusChange(true);
+            }else if(res.status === 204) {
+              setShowErrorStatusChange(true);
+            }
           })
         }else {
           setShowLimitPlayersOnMarket(true)
@@ -166,12 +171,13 @@ export default function PlayersCard(...props) {
       }
       setShowSuccessStatusChange(false);
       setShowLimitPlayersOnMarket(false);
+      setShowErrorStatusChange(false);
     };
 
     const positionColor = position === "A" ? classes.alero : position === "B" ? classes.base : position === "E" ? classes.escolta : position === "AP" ? classes.alaPivot : position === "P" ? classes.pivot : null;
     const playerImgFinal = playerImg.split('.')[1] === 'gif' ? siluetaBasket : playerImg;
     const accionMercado = status === "ConEquipo" ? 
-            <IconButton onClick = {() => actualizaJugadorATranseferible(_id,"Transferible")} aria-label="mover al mercado">
+            <IconButton onClick = {() => actualizaJugadorATranseferible(_id,"Transferible",name)} aria-label="mover al mercado">
               <Typography
                 aria-owns={open ? 'mouse-over-popover' : undefined}
                 aria-haspopup="true"
@@ -203,7 +209,7 @@ export default function PlayersCard(...props) {
               </Popover>
             </IconButton>
           :
-            <IconButton onClick = {() => actualizaJugadorATranseferible(_id, "ConEquipo")} aria-label="sacar del mercado">
+            <IconButton onClick = {() => actualizaJugadorATranseferible(_id, "ConEquipo",name)} aria-label="sacar del mercado">
               <Typography
                 aria-owns={open ? 'mouse-over-popover' : undefined}
                 aria-haspopup="true"
@@ -307,6 +313,11 @@ export default function PlayersCard(...props) {
             <Snackbar open={showSuccessStatusChange} autoHideDuration={6000} onClose={handleClose}>
                 <Alert onClose={handleClose} severity="info">
                     Jugador cambiado de estado correctamente
+                </Alert>
+            </Snackbar>
+            <Snackbar open={showErrorStatusChange} autoHideDuration={6000} onClose={handleClose}>
+                <Alert onClose={handleClose} severity="info">
+                    Un jugador alineado no puede pasar al mercado
                 </Alert>
             </Snackbar>
             <Snackbar open={showLimitPlayersOnMarket} autoHideDuration={6000} onClose={handleClose}>

@@ -222,14 +222,15 @@ export default function ComunityDetails(props) {
     const deleteTeamAfterPopUpById = () => {
         TeamDataService.deleteTeam(idTeamToDelete, nickNameToDelete).then((res) => {
             if(res.status === 200) { 
-                TeamDataService.getTeamsByComunidad(comunity._id).then((responseTeams) => {
-                    if(responseTeams.data === ""){
-                        history.push('/community')
-                    }else{
-                        let comunityTeamsOrdered = responseTeams.data.sort(Utiles.compare); 
-                        setComunityPlayers(comunityTeamsOrdered);
-                    }
-                })
+                history.go(0);
+                // TeamDataService.getTeamsByComunidad(comunity._id).then((responseTeams) => {
+                //     if(responseTeams.data === ""){
+                //         history.push('/community')
+                //     }else{
+                //         let comunityTeamsOrdered = responseTeams.data.sort(Utiles.compare); 
+                //         setComunityPlayers(comunityTeamsOrdered);
+                //     }
+                // })
                 window.alert(res.data);
             }else {
                 window.alert(res.data);

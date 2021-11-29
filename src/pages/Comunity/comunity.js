@@ -150,7 +150,7 @@ export default function ManageComunity() {
                 "numIntegrants":comunity.numIntegrantes, 
                 "budget": comunity.budget, 
                 "type": type, 
-                "jugadoresMaximosMercado" : comunity.jugadoresMaximosMercado,
+                "maxPlayersOnMarket" : comunity.jugadoresMaximosMercado,
                 "maxDaysPlayerOnMarket" : comunity.maxDaysPlayerOnMarket,
                 "playersForUserInMarket" : comunity.playersForUserInMarket
             }

@@ -138,7 +138,7 @@ export const  MarketPlayers = (props) => {
     const [marketPlayers, setMarketPlayers] = useState([]);
     const [myPlayers, setMyPlayers] = useState([]);
     const [comunity, setComunity] = useState([]);
-    const [actualTeam, setActualTeam] = useState(JSON.parse(sessionStorage.getItem('team')));
+    const [actualTeam, setActualTeam] = useState({});
     const [offerAmount, setOfferAmount] = useState(undefined);
     const {auth} = useUser();
     const history = useHistory();
@@ -160,12 +160,15 @@ export const  MarketPlayers = (props) => {
             setLoading(true)
             console.log(props);
             ComunidadDataService.getOneComunity(auth.id).then((response) => {    
-                let playersToTransfer = response.data.players.filter(player => player.status === 'Transferible' && actualTeam.name !== player.team.name);
-                let myPlayersToTransfer = response.data.players.filter(player => player.status === 'Transferible' && actualTeam.name === player.team.name);
-                setMarketPlayers(playersToTransfer);
-                setMyPlayers(myPlayersToTransfer)
-                setComunity(response.data);
-                setLoading(false);    
+                TeamDataService.getTeam(auth.id).then((responseTeam) => {
+                    let playersToTransfer = response.data.players.filter(player => player.status === 'Transferible' && responseTeam.data.name !== player.team.name);
+                    let myPlayersToTransfer = response.data.players.filter(player => player.status === 'Transferible' && responseTeam.data.name === player.team.name);
+                    setActualTeam(responseTeam.data);
+                    setMarketPlayers(playersToTransfer);
+                    setMyPlayers(myPlayersToTransfer)
+                    setComunity(response.data);
+                    setLoading(false);    
+                })
             })
         }
     }, [history, auth])

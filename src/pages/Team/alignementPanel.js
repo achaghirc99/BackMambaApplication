@@ -137,7 +137,9 @@ export default function AlignementPanel(props) {
         alero: undefined
     })
     const [journeys,setJourneys] = useState([]);
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = useState(false);
+    const [openIncorrect, setOpenIncorrect] = useState(false);
+    const [openPlayerOnMarket, setOpenPlayerOnMarket] = useState(false);
     
 
 
@@ -205,31 +207,51 @@ export default function AlignementPanel(props) {
             const playerBase = players.filter (player => {
                 return player.name === event.target.value;
             })
-            setAlignedPlayers({...alignedPlayers, base: playerBase[0]});
+            if(playerBase[0].status === 'Transferible') {
+                setOpenPlayerOnMarket(true);
+            }else{
+                setAlignedPlayers({...alignedPlayers, base: playerBase[0]});
+            }
         }
         if(event.target.name === "escolta") {
             const playerEscolta = players.filter (player => {
                 return player.name === event.target.value;
             })
-            setAlignedPlayers({...alignedPlayers, escolta: playerEscolta[0]});
+            if(playerEscolta[0].status === 'Transferible') {
+                setOpenPlayerOnMarket(true);
+            }else{
+                setAlignedPlayers({...alignedPlayers, escolta: playerEscolta[0]});
+            }
         }
         if(event.target.name === "alaPivot") {
             const playerAlaPivot = players.filter (player => {
                 return player.name === event.target.value;
             })
-            setAlignedPlayers({...alignedPlayers, alaPivot: playerAlaPivot[0]});
+            if(playerAlaPivot[0].status === 'Transferible') {
+                setOpenPlayerOnMarket(true);
+            }else{
+                setAlignedPlayers({...alignedPlayers, alaPivot: playerAlaPivot[0]});
+            }
         }
         if(event.target.name === "alero") {
             const playerAlero = players.filter (player => {
                 return player.name === event.target.value;
             })
-            setAlignedPlayers({...alignedPlayers, alero: playerAlero[0]});
+            if(playerAlero[0].status === 'Transferible') {
+                setOpenPlayerOnMarket(true);
+            }else{
+                setAlignedPlayers({...alignedPlayers, alero: playerAlero[0]});
+            }
         }
         if(event.target.name === "pivot") {
             const playerPivot = players.filter (player => {
                 return player.name === event.target.value;
             })
-            setAlignedPlayers({...alignedPlayers, pivot: playerPivot[0]});
+            if(playerPivot[0].status === 'Transferible') {
+                setOpenPlayerOnMarket(true);
+            }else{
+                setAlignedPlayers({...alignedPlayers, pivot: playerPivot[0]});
+            }
         }
     }
     const handleChargeJourney = (event) => {    
@@ -263,7 +285,7 @@ export default function AlignementPanel(props) {
 
     const handleSubmitAlignment = () => {
         setLoading(true);
-        if(handleValidateAlignment) {
+        if(handleValidateAlignment()) {
             const object = {
                 base : alignedPlayers.base, 
                 alero : alignedPlayers.alero,
@@ -278,9 +300,10 @@ export default function AlignementPanel(props) {
             }).catch(e => {
                 console.log(e);
             })
+        }else{
+            setOpenIncorrect(true)
         }
         setLoading(false);
-
     }
 
     const handleClose = (event, reason) => {
@@ -288,26 +311,27 @@ export default function AlignementPanel(props) {
             return;
         }
         setOpen(false);
+        setOpenIncorrect(false);
+        setOpenPlayerOnMarket(false);
     };
     const handleValidateAlignment = () => {
         var validate  =  true;
 
-        if(base === undefined) {
+        if(alignedPlayers.base === undefined) {
             validate = false;
         } 
-        if(alero === undefined) {
+        if(alignedPlayers.alero === undefined) {
             validate = false;
         }
-        if(escolta === undefined){
+        if(alignedPlayers.escolta === undefined){
             validate = false;
         }
-        if(alaPivot === undefined) {
+        if(alignedPlayers.alaPivot === undefined) {
             validate = false;
         }
-        if(pivot === undefined) {
+        if(alignedPlayers.pivot === undefined) {
             validate = false;
         }
-
         return validate;
     }
   
@@ -663,6 +687,16 @@ export default function AlignementPanel(props) {
             <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
                 <Alert onClose={handleClose} severity="info">
                     Alineación guardada correctamente
+                </Alert>
+            </Snackbar>  
+            <Snackbar open={openIncorrect} autoHideDuration={6000} onClose={handleClose}>
+                <Alert onClose={handleClose} severity="warning">
+                    Rellene todas las posiciones para poder guardar la alineación
+                </Alert>
+            </Snackbar>  
+            <Snackbar open={openPlayerOnMarket} autoHideDuration={6000} onClose={handleClose}>
+                <Alert onClose={handleClose} severity="warning">
+                    Recuerde que un jugador que esta en el mercado no puede ser alineado
                 </Alert>
             </Snackbar>  
             <Backdrop className={classes.backdrop} open={loading}>
