@@ -35,7 +35,8 @@
         "web-vitals": "^1.0.1"
     },
     "scripts": {
-        "start": "set PORT=3001 && react-scripts start",
+        "start": "serve -s build",
+        "local": "set PORT=3001 && react-scripts start",
         "build": "react-scripts --optimize_for_size --max_old_space_size=2048 build",
         "test": "react-scripts --optimize_for_size --max_old_space_size=2048 test",
         "eject": "react-scripts --optimize_for_size --max_old_space_size=2048 eject"

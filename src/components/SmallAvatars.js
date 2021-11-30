@@ -1,4 +1,3 @@
-import React from 'react'
 import {Avatar, withStyles} from '@material-ui/core';
 
 export const SmallAvatarPositive = withStyles((theme) => ({

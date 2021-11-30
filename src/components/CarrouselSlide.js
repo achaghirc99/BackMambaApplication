@@ -1,15 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 import Card from "@material-ui/core/Card";
 import {makeStyles} from "@material-ui/core/styles";
 import DoneIcon from '@material-ui/icons/Done';
-import DeleteIcon from "@material-ui/icons/Delete";
 import Button from "@material-ui/core/Button";
 import TrendingFlatIcon from '@material-ui/icons/TrendingFlat';
 import Grid from "@material-ui/core/Grid";
-import { CardHeader, Paper, Typography, CardContent, CardActions, Avatar, Badge, Container } from "@material-ui/core";
+import { CardHeader, Typography, CardContent, Avatar, Container } from "@material-ui/core";
 import moment from "moment";
-import {SmallAvatarNegative, SmallAvatarPositive} from '../components/SmallAvatars'
-import offerService from "../services/OfferService/offer.service";
 import utils from "../hooks/utils";
 
 const useStyles = makeStyles((theme) => ({
@@ -49,7 +46,6 @@ const useStyles = makeStyles((theme) => ({
     offerAmount: {
         display: 'flex',
         justifyContent: 'center',
-        alignItems: 'space-between',
         alignItems: 'center',
         margin: '10px auto'
     },

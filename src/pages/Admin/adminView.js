@@ -2,9 +2,9 @@ import React, { useState, useEffect} from 'react'
 import PropTypes from 'prop-types';
 import { makeStyles, useTheme } from '@material-ui/core/styles'
 import Alert from '@material-ui/lab/Alert'
-import { TextField, Button, Snackbar, Container, Grid, Typography, MenuItem, InputLabel,FormControl, Select, 
-    ButtonBase, Card, CardContent, CardActionArea, CardMedia,Table,TableHead,TableBody, TableCell, TableContainer, TableFooter, TablePagination, TableRow,IconButton, Paper, Modal, CardActions, Collapse, CircularProgress, Backdrop} from '@material-ui/core'
-import createComunidadImg from "../../static/images/createComunidad.png"
+import { TextField, Button, Snackbar, Container, Grid, Typography, 
+    ButtonBase, Card, CardContent, CardActionArea, CardMedia, CardActions, Collapse, CircularProgress, Backdrop,
+    Table,TableHead,TableBody, TableCell, TableContainer, TableFooter, TablePagination, TableRow,IconButton, Paper} from '@material-ui/core'
 import joinComunityImg from "../../static/images/joinComunity.jpg"
 import clsx from 'clsx';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
@@ -12,6 +12,9 @@ import TeamDataService from "../../services/Team/team.service";
 import AdminDataService from "../../services/Admin/admin.service";
 import useUser from '../../hooks/useUser';
 import {useHistory} from 'react-router';
+import CustomPaginationActionsTable from '../../components/TableUsers';
+import CustomPaginationActionsTableComunities from '../../components/TableComunities';
+
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -90,16 +93,25 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
+
+
 export default function AdminView() {
     const classes = useStyles();
     const [loading, setLoading] = useState(false)
     const [expanded, setExpanded] = useState(false);
     const [showRefreshMarketCorrect, setShowRefreshMarketCorrect] = useState(false);
     const [showRefreshMarketIncorrect, setShowRefreshMarketIncorrect] = useState(false);
+    const [showReqError, setShowReqError] = useState(false);
     const [errors, setErrors] = useState({})
     const [jornada, setJornada] = useState();
+    const [users, setUsers] = useState([]);
+    const [comunities, setComunities] = useState([]);
     const {auth} = useUser();
     const history = useHistory();
+    const [actionToDo, setActionToDo] = useState({
+        manageUsers: false,
+        manageComunities: false
+    });
     const handleExpandClick = () => {
       setExpanded(!expanded);
     };
@@ -109,13 +121,25 @@ export default function AdminView() {
     };
 
     
-    useState(() => {
+    useEffect(() => {
         if(!auth) {
             history.push("/")
         }
         if(auth.rol !== 'ADMINISTRADOR'){
             history.push("/")
         }
+        AdminDataService.getAllUsersFromSystem().then((res) => {
+            if(res.status === 200){ 
+                setUsers(res.data);
+                AdminDataService.getAllComunitiesFromSystem().then((resC) => {
+                    if(res.status === 200){ 
+                        setComunities(resC.data);
+                    }
+                })
+            }else{
+                setShowReqError(true);
+            }
+        })
     }, [])
 
     const generarJornada = () => {
@@ -157,6 +181,17 @@ export default function AdminView() {
         })
         setLoading(false);
     }
+
+    const manageUsers = () => { 
+        setLoading(true);
+        setActionToDo({ ...actionToDo,  manageUsers: true,manageComunities: false});
+        setLoading(false);
+    }
+    const manageComunities = () => { 
+        setLoading(true); 
+        setActionToDo({ ...actionToDo, manageComunities: true, manageUsers:false });
+        setLoading(false);
+    }
     
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -164,10 +199,12 @@ export default function AdminView() {
         }
         setShowRefreshMarketCorrect(false);
         setShowRefreshMarketIncorrect(false);
+        setShowReqError(false);
       };
 
 
     return (
+        <div>
             <Container className={classes.containerCards}>
                 <Grid container spacing={3}> 
                     <Grid align="center" item xs={12} sm={3} md={4}  >  
@@ -214,10 +251,10 @@ export default function AdminView() {
                           <CardActionArea>
                               <CardMedia
                                 component="img"
-                                alt="Crear Comunidad"
+                                alt="Gestionar Ofertas"
                                 height="150"
                                 image={joinComunityImg}
-                                title="Crear Comunidad"
+                                title=" Gestionar Ofertas"
                               />
                               <CardContent>
                                   <Typography className={classes.createComunity} gutterBottom>
@@ -234,10 +271,10 @@ export default function AdminView() {
                           <CardActionArea>
                               <CardMedia
                                 component="img"
-                                alt="Crear Comunidad"
+                                alt="Refrescar Mercado"
                                 height="150"
                                 image={joinComunityImg}
-                                title="Crear Comunidad"
+                                title="Refrescar Mercado"
                               />
                               <CardContent>
                                   <Typography className={classes.createComunity} gutterBottom>
@@ -250,14 +287,14 @@ export default function AdminView() {
                     </Grid>
                     <Grid align="center" item xs={12} sm={3} md={4} >  
                         <Card variant="outlined">
-                          <ButtonBase className={classes.cardAction} onClick={() => console.log()}>
+                          <ButtonBase className={classes.cardAction} onClick={() => manageUsers()}>
                           <CardActionArea>
                               <CardMedia
                                 component="img"
-                                alt="Crear Comunidad"
+                                alt="Gestionar Usuarios"
                                 height="150"
                                 image={joinComunityImg}
-                                title="Crear Comunidad"
+                                title="Gestionar Usuarios"
                               />
                               <CardContent>
                                   <Typography className={classes.createComunity} gutterBottom>
@@ -270,14 +307,14 @@ export default function AdminView() {
                     </Grid>
                     <Grid align="center" item xs={12} sm={3} md={4} >  
                         <Card variant="outlined">
-                          <ButtonBase className={classes.cardAction} onClick={() => console.log()}>
+                          <ButtonBase className={classes.cardAction} onClick={() => manageComunities()}>
                           <CardActionArea>
                               <CardMedia
                                 component="img"
-                                alt="Crear Comunidad"
+                                alt="Gestionar Comunidades"
                                 height="150"
                                 image={joinComunityImg}
-                                title="Crear Comunidad"
+                                title="Gestionar Comunidades"
                               />
                               <CardContent>
                                   <Typography className={classes.createComunity} gutterBottom>
@@ -302,6 +339,45 @@ export default function AdminView() {
                         No se ha refrescado correctamente el mercado de las comunidades.
                     </Alert>
                 </Snackbar>
+                <Snackbar open={showReqError} autoHideDuration={6000} onClose={handleClose}>
+                    <Alert onClose={handleClose} severity="error">
+                        Fallo en la consulta para recuperar datos
+                    </Alert>
+                </Snackbar>
             </Container>
+            <Container>
+                {actionToDo.manageUsers && (
+                    <Container className={classes.containerTable}>
+                       <CustomPaginationActionsTable users={users}/>
+                    </Container>
+                )
+                }    
+            </Container>
+            <Container>
+                {actionToDo.manageComunities && (
+                    <Container className={classes.containerTable}>
+                       <CustomPaginationActionsTableComunities comunities={comunities}/>
+                    </Container>
+                )
+                }    
+            </Container>
+        </div>    
     )
+}
+
+const stylesComponent = {
+    buttonCrear: {
+        backgroundColor: '#006e85',
+        textTransform: 'none',
+        letterSpacing: 'normal',
+        fontSize: '15px',
+        fontWeight: '600',
+        textAlign: 'center',
+        margin: 'auto',
+        display: 'block',
+        marginTop: '30px'
+    },
+    snak: {
+        marginBottom: '20px',
+    }
 }

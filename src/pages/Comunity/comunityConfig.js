@@ -92,9 +92,10 @@ export default function ComunityConfig(props) {
     const [comunity, setComunity] = useState({})
     const [owner, setOwner] = useState({});
     const {auth} = useUser();
-    const [errors, setErrors] = useState({});
+    const [errors, setErrors] = useState([]);
     const [type, setType] = useState('');
     const [openSuccess, setOpenSuccess] = useState(false);
+    const [openErrors, setOpenErrors] = useState(false);
     const history = useHistory();
     useEffect(() => {
         if(!auth) {
@@ -123,6 +124,7 @@ export default function ComunityConfig(props) {
     }
     const handleSnackbarClose = () => {
         setOpenSuccess(false);
+        setOpenErrors(false);
     }
 
     const handleChangeType = (event) => {
@@ -139,8 +141,8 @@ export default function ComunityConfig(props) {
         }  
     };
 
-    function handleValidation() {
-        let objErrors = {};
+    const handleValidation = () => {
+        let objErrors = [];
         let valid = true;
 
         if(!comunity.name) {
@@ -151,7 +153,7 @@ export default function ComunityConfig(props) {
             valid = false;
             objErrors['password'] = 'Tienes que rellenar este campo con un valor válido'
         }
-        if(!comunity.numIntegrantes) {
+        if(!comunity.numIntegrants) {
             valid = false;
             objErrors['numIntegrantes'] = 'Tienes que rellenar este campo con un valor válido'
         }
@@ -159,9 +161,9 @@ export default function ComunityConfig(props) {
             valid = false;
             objErrors['budget'] = 'Tienes que rellenar este campo con un valor válido'
         }
-        if(!comunity.jugadoresMaximosMercado) {
+        if(!comunity.maxPlayersOnMarket) {
             valid = false;
-            objErrors['jugadoresMaximosMercado'] = 'Tienes que rellenar este campo con un valor válido'
+            objErrors['maxPlayersOnMarket'] = 'Tienes que rellenar este campo con un valor válido'
         }
         if(!comunity.maxDaysPlayerOnMarket) {
             valid = false;
@@ -176,12 +178,17 @@ export default function ComunityConfig(props) {
     }
 
     const handleSubmitComunity = () => {
-        ComunidadDataService.updateComunity(comunity).then(res => {
-           if(res.status === 200) {
-               setOpenSuccess(true);
-           };
-        });
-        
+        const valid = handleValidation();
+        if(valid == true){
+            ComunidadDataService.updateComunity(comunity).then(res => {
+                if(res.status === 200) {
+                    setOpenSuccess(true);
+                };
+            });
+        }else{ 
+            setOpenErrors(true); 
+        }   
+
     }
 
     const aplicarMaginTopIfPublic = type === "Public" ? classes.styleGripMarginTop : classes.styleMarginGripStandar;
@@ -235,8 +242,8 @@ export default function ComunityConfig(props) {
                 </Grid>
                 <Grid align="center" item  sm={12} md={6}>
                     <div className={classes.styleMarginGripStandar}>
-                        <TextField id="jugadoresMaximosMercado" name="jugadoresMaximosMercado" label="Jugadores máximos en mercado" type="number" 
-                            value={comunity.jugadoresMaximosMercado} InputLabelProps={{shrink: true}} min="1" max="10" step="2" variant="outlined" onChange={(e) => handleChange(e)}/>
+                        <TextField id="maxPlayersOnMarket" name="maxPlayersOnMarket" label="Jugadores máximos en mercado" type="number" 
+                            value={comunity.maxPlayersOnMarket} InputLabelProps={{shrink: true}} min="1" max="10" step="2" variant="outlined" onChange={(e) => handleChange(e)}/>
                     </div>
                 </Grid>
                 <Grid item align="center" sm={12} md={6}>
@@ -274,6 +281,11 @@ export default function ComunityConfig(props) {
             <Snackbar open={openSuccess} autoHideDuration={6000} onClose={handleSnackbarClose}>
               <Alert onClose={handleSnackbarClose} severity="success">
                 Datos actualizados correctamente
+              </Alert>
+            </Snackbar>
+            <Snackbar open={openErrors} autoHideDuration={6000} onClose={handleSnackbarClose}>
+              <Alert onClose={handleSnackbarClose} severity="error">
+                Se han producido un error, algún campo se encuentra vacío.
               </Alert>
             </Snackbar>
         </div>
